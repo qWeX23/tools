@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Credit Band Payment Simulator</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 30px;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .back-link:hover { text-decoration: underline; }
+    h1 {
+      margin: 0 0 8px;
+      color: #667eea;
+    }
+    h3 { color: #444; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; background: #f8f9fa; }
+    label { display: block; font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 500; }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    input:focus { outline: 2px solid #667eea; border-color: #667eea; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    button {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    button:hover { background: #5568d3; }
+    .btn-secondary { background: #f7f7f7; color: #333; }
+    .btn-secondary:hover { background: #e9e9e9; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #e9ecef; padding: 10px 8px; text-align: left; font-size: 13px; }
+    th { font-size: 12px; color: #555; background: #f1f3f5; font-weight: 600; }
+    tbody tr:hover { background: #f8f9fa; }
+    .btnbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .small { font-size: 12px; color: #666; }
+    .danger { border-color: #e2b3b3; background: #fff2f2; color: #c44; }
+    .danger:hover { background: #ffe6e6; }
+    .right { text-align: right; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: #e9ecef; padding: 2px 6px; border-radius: 4px; }
+    .remove-btn {
+      background: transparent;
+      border: none;
+      color: #999;
+      font-size: 18px;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+    .remove-btn:hover { color: #c44; background: transparent; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .policy-box {
+      background: #e8f4fd;
+      border: 1px solid #b8daff;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+    .policy-box code {
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .results-card {
+      margin-top: 16px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    #status {
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    #status.success { background: #d4edda; color: #155724; }
+    #status.error { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <a href="../" class="back-link">&larr; Back to Tools</a>
+
+    <h1>Credit Band Payment Simulator</h1>
+
+    <div class="policy-box">
+      <strong>Payment Policy:</strong>
+      <code>payment = max(pct(balance) * balance, minPayment(balance))</code>, then capped so you never overpay.
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin:0 0 14px;">Inputs</h3>
+        <div class="row">
+          <div>
+            <label>Starting Balance ($)</label>
+            <input id="startingBalance" type="number" step="0.01" value="5000" />
+          </div>
+          <div>
+            <label>APR (e.g. 0.2499 = 24.99%)</label>
+            <input id="apr" type="number" step="0.0001" value="0.24" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px;">
+          <div>
+            <label>Months to simulate</label>
+            <input id="months" type="number" step="1" value="24" />
+          </div>
+          <div>
+            <label>Monthly Charges ($, optional)</label>
+            <input id="monthlyCharges" type="number" step="0.01" value="0" />
+          </div>
+        </div>
+
+        <div class="btnbar" style="margin-top:16px;">
+          <button id="runBtn">Run Simulation</button>
+          <button id="addBandBtn" class="btn-secondary">+ Add Band</button>
+          <button id="resetBtn" class="danger">Reset Example</button>
+          <button id="downloadCsvBtn" class="btn-secondary">Download CSV</button>
+        </div>
+        <div style="margin-top:10px;"><span id="status" class="small"></span></div>
+
+        <h3 style="margin:20px 0 10px;">Payment Bands</h3>
+        <div class="small" style="margin-bottom:10px;">
+          Rows are matched by "largest lower bound &le; current balance". Keep lower bounds ascending.
+        </div>
+
+        <table id="bandsTable">
+          <thead>
+            <tr>
+              <th>Lower Bound ($)</th>
+              <th>Pct of Balance</th>
+              <th>Min Payment ($)</th>
+              <th class="right">Remove</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 14px;">Balance & Payment Graph</h3>
+        <canvas id="chart" height="260"></canvas>
+        <div class="small" id="chartNote" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <div class="results-card">
+      <h3 style="margin:0 0 14px;">Monthly Results</h3>
+      <div style="overflow-x:auto;">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Start Balance</th>
+              <th>Interest</th>
+              <th>Charges</th>
+              <th>Payment</th>
+              <th>End Balance</th>
+              <th>Pct Used</th>
+              <th>Min Payment</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <script>
+    // ---------- helpers ----------
+    const $ = (id) => document.getElementById(id);
+    const round2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
+    const fmt = (x) => x.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function setStatus(msg, type = "") {
+      const el = $("status");
+      el.textContent = msg || "";
+      el.className = "small " + type;
+    }
+
+    // ---------- bands UI ----------
+    function addBandRow(lower = 0, pct = 0.0, minPayment = 0) {
+      const tr = document.createElement("tr");
+
+      const tdLower = document.createElement("td");
+      const tdPct = document.createElement("td");
+      const tdMin = document.createElement("td");
+      const tdRm = document.createElement("td");
+      tdRm.className = "right";
+
+      tdLower.innerHTML = `<input type="number" step="0.01" value="${lower}">`;
+      tdPct.innerHTML   = `<input type="number" step="0.0001" value="${pct}">`;
+      tdMin.innerHTML   = `<input type="number" step="0.01" value="${minPayment}">`;
+      tdRm.innerHTML    = `<button class="remove-btn" title="Remove band">&times;</button>`;
+
+      tdRm.querySelector("button").addEventListener("click", () => {
+        tr.remove();
+        run();
+      });
+
+      // auto-run on edits
+      [tdLower, tdPct, tdMin].forEach(td => {
+        td.querySelector("input").addEventListener("input", () => run());
+      });
+
+      tr.appendChild(tdLower);
+      tr.appendChild(tdPct);
+      tr.appendChild(tdMin);
+      tr.appendChild(tdRm);
+
+      $("bandsTable").querySelector("tbody").appendChild(tr);
+    }
+
+    function getBands() {
+      const rows = [...$("bandsTable").querySelector("tbody").querySelectorAll("tr")];
+      const bands = rows.map(tr => {
+        const inputs = tr.querySelectorAll("input");
+        return {
+          lower: parseFloat(inputs[0].value || "0"),
+          pct: parseFloat(inputs[1].value || "0"),
+          minPayment: parseFloat(inputs[2].value || "0")
+        };
+      }).filter(b => !Number.isNaN(b.lower) && !Number.isNaN(b.pct) && !Number.isNaN(b.minPayment));
+
+      bands.sort((a, b) => a.lower - b.lower);
+      return bands;
+    }
+
+    function pickBand(bands, balance) {
+      let chosen = bands[0];
+      for (const b of bands) {
+        if (balance >= b.lower) chosen = b;
+        else break;
+      }
+      return chosen;
+    }
+
+    // ---------- simulation ----------
+    function simulate({ startingBalance, apr, months, monthlyCharges, bands }) {
+      const r = apr / 12.0;
+      let balance = startingBalance;
+      const out = [];
+
+      for (let m = 1; m <= months; m++) {
+        const band = pickBand(bands, balance);
+        const interest = balance * r;
+        const charges = monthlyCharges;
+
+        const rawPayment = band.pct * balance;
+        let payment = Math.max(rawPayment, band.minPayment);
+
+        // cap payment so we never go negative
+        payment = Math.min(payment, balance + interest + charges);
+
+        const endBalance = Math.max(0, balance + interest + charges - payment);
+
+        out.push({
+          month: m,
+          startBalance: round2(balance),
+          pct: band.pct,
+          minPayment: band.minPayment,
+          interest: round2(interest),
+          charges: round2(charges),
+          payment: round2(payment),
+          endBalance: round2(endBalance)
+        });
+
+        balance = endBalance;
+        if (balance === 0) break;
+      }
+      return out;
+    }
+
+    // ---------- chart + table ----------
+    let chart = null;
+
+    function renderChart(rows) {
+      const ctx = $("chart").getContext("2d");
+      const labels = rows.map(r => `M${r.month}`);
+      const balance = rows.map(r => r.endBalance);
+      const payment = rows.map(r => r.payment);
+
+      if (chart) chart.destroy();
+      if (!window.Chart) {
+        $("chartNote").textContent = "Chart.js failed to load (CDN blocked?). You can still use the results table below.";
+        return;
+      }
+
+      $("chartNote").textContent = "";
+
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "End Balance",
+              data: balance,
+              tension: 0.3,
+              borderColor: "#667eea",
+              backgroundColor: "rgba(102, 126, 234, 0.1)",
+              fill: true
+            },
+            {
+              label: "Payment",
+              data: payment,
+              tension: 0.3,
+              borderColor: "#28a745",
+              backgroundColor: "rgba(40, 167, 69, 0.1)",
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { position: "top" },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ": $" + fmt(context.parsed.y);
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: { callback: v => "$" + v.toLocaleString() },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function renderResults(rows) {
+      const tbody = $("resultsTable").querySelector("tbody");
+      tbody.innerHTML = "";
+
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.month}</td>
+          <td>$${fmt(r.startBalance)}</td>
+          <td>$${fmt(r.interest)}</td>
+          <td>$${fmt(r.charges)}</td>
+          <td>$${fmt(r.payment)}</td>
+          <td>$${fmt(r.endBalance)}</td>
+          <td>${(r.pct * 100).toFixed(2)}%</td>
+          <td>$${fmt(r.minPayment)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function toCsv(rows) {
+      const header = ["month", "start_balance", "interest", "charges", "payment", "end_balance", "pct", "min_payment"];
+      const lines = [header.join(",")];
+      for (const r of rows) {
+        lines.push([
+          r.month,
+          r.startBalance,
+          r.interest,
+          r.charges,
+          r.payment,
+          r.endBalance,
+          r.pct,
+          r.minPayment
+        ].join(","));
+      }
+      return lines.join("\n");
+    }
+
+    function download(filename, text) {
+      const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // ---------- run ----------
+    function run() {
+      try {
+        const startingBalance = parseFloat($("startingBalance").value || "0");
+        const apr = parseFloat($("apr").value || "0");
+        const months = parseInt($("months").value || "0", 10);
+        const monthlyCharges = parseFloat($("monthlyCharges").value || "0");
+        const bands = getBands();
+
+        if (!bands.length) { setStatus("Add at least one band.", "error"); return; }
+        if (!(months > 0)) { setStatus("Months must be > 0.", "error"); return; }
+        if (!(startingBalance >= 0)) { setStatus("Starting balance must be >= 0.", "error"); return; }
+
+        const rows = simulate({ startingBalance, apr, months, monthlyCharges, bands });
+        renderChart(rows);
+        renderResults(rows);
+
+        const finalBalance = rows[rows.length - 1]?.endBalance ?? 0;
+        const totalPaid = rows.reduce((sum, r) => sum + r.payment, 0);
+        const totalInterest = rows.reduce((sum, r) => sum + r.interest, 0);
+
+        setStatus(
+          `Simulated ${rows.length} month(s). Final balance: $${fmt(finalBalance)} | Total paid: $${fmt(totalPaid)} | Total interest: $${fmt(totalInterest)}`,
+          "success"
+        );
+        window.__lastRows = rows;
+      } catch (e) {
+        console.error(e);
+        setStatus("Error running simulation (check inputs).", "error");
+      }
+    }
+
+    // ---------- init ----------
+    function resetExample() {
+      $("startingBalance").value = "5000";
+      $("apr").value = "0.24";
+      $("months").value = "24";
+      $("monthlyCharges").value = "0";
+
+      const tbody = $("bandsTable").querySelector("tbody");
+      tbody.innerHTML = "";
+
+      // Example bands that demonstrate different payment strategies based on balance
+      addBandRow(0, 0.00, 0);        // $0+: No payment (grace period for zero balance)
+      addBandRow(100, 0.05, 25);     // $100+: 5% or $25 min
+      addBandRow(500, 0.04, 35);     // $500+: 4% or $35 min
+      addBandRow(1000, 0.03, 40);    // $1000+: 3% or $40 min
+      addBandRow(3000, 0.025, 50);   // $3000+: 2.5% or $50 min
+
+      run();
+    }
+
+    // Event listeners
+    $("runBtn").addEventListener("click", run);
+    $("addBandBtn").addEventListener("click", () => addBandRow(0, 0.03, 35));
+    $("resetBtn").addEventListener("click", resetExample);
+    $("downloadCsvBtn").addEventListener("click", () => {
+      const rows = window.__lastRows || [];
+      if (!rows.length) return setStatus("Run simulation first.", "error");
+      download("credit_sim.csv", toCsv(rows));
+    });
+
+    // Auto-run on input changes
+    ["startingBalance", "apr", "months", "monthlyCharges"].forEach(id => {
+      $(id).addEventListener("input", run);
+    });
+
+    // Initialize with example data
+    resetExample();
+  </script>
+</body>
+</html>
