@@ -175,9 +175,22 @@
       </div>
 
       <div class="card">
-        <h3 style="margin:0 0 14px;">Balance & Payment Graph</h3>
+        <h3 style="margin:0 0 14px;">Balance & Payment Over Time</h3>
         <canvas id="chart" height="260"></canvas>
         <div class="small" id="chartNote" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px;">
+      <div class="card">
+        <h3 style="margin:0 0 14px;">Payment vs Balance</h3>
+        <canvas id="paymentVsBalanceChart" height="260"></canvas>
+        <div class="small" style="margin-top:10px;">Shows how payment amount changes relative to current balance (scatter plot)</div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 14px;">Payment Band Schedule</h3>
+        <canvas id="bandChart" height="260"></canvas>
+        <div class="small" style="margin-top:10px;">Theoretical payment amounts across balance ranges based on your bands</div>
       </div>
     </div>
 
@@ -313,6 +326,8 @@
 
     // ---------- chart + table ----------
     let chart = null;
+    let paymentVsBalanceChart = null;
+    let bandChart = null;
 
     function renderChart(rows) {
       const ctx = $("chart").getContext("2d");
@@ -366,6 +381,118 @@
           },
           scales: {
             y: {
+              ticks: { callback: v => "$" + v.toLocaleString() },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function renderPaymentVsBalanceChart(rows) {
+      const ctx = $("paymentVsBalanceChart").getContext("2d");
+
+      if (paymentVsBalanceChart) paymentVsBalanceChart.destroy();
+      if (!window.Chart) return;
+
+      // Create scatter data: x = balance, y = payment
+      const scatterData = rows.map(r => ({
+        x: r.startBalance,
+        y: r.payment
+      }));
+
+      paymentVsBalanceChart = new Chart(ctx, {
+        type: "scatter",
+        data: {
+          datasets: [
+            {
+              label: "Payment vs Balance",
+              data: scatterData,
+              backgroundColor: "#667eea",
+              borderColor: "#667eea",
+              pointRadius: 6,
+              pointHoverRadius: 8
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `Balance: $${fmt(context.parsed.x)} → Payment: $${fmt(context.parsed.y)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "Current Balance ($)" },
+              ticks: { callback: v => "$" + v.toLocaleString() }
+            },
+            y: {
+              title: { display: true, text: "Payment ($)" },
+              ticks: { callback: v => "$" + v.toLocaleString() },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function renderBandChart(bands, maxBalance) {
+      const ctx = $("bandChart").getContext("2d");
+
+      if (bandChart) bandChart.destroy();
+      if (!window.Chart || !bands.length) return;
+
+      // Generate points showing the payment schedule across balance ranges
+      const points = [];
+      const step = Math.max(10, maxBalance / 200);
+
+      for (let bal = 0; bal <= maxBalance * 1.1; bal += step) {
+        const band = pickBand(bands, bal);
+        const payment = Math.max(band.pct * bal, band.minPayment);
+        points.push({ x: bal, y: payment });
+      }
+
+      bandChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          datasets: [
+            {
+              label: "Calculated Payment",
+              data: points,
+              borderColor: "#e83e8c",
+              backgroundColor: "rgba(232, 62, 140, 0.1)",
+              fill: true,
+              tension: 0,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `At $${fmt(context.parsed.x)} balance → $${fmt(context.parsed.y)} payment`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: "linear",
+              title: { display: true, text: "Balance ($)" },
+              ticks: { callback: v => "$" + v.toLocaleString() }
+            },
+            y: {
+              title: { display: true, text: "Payment ($)" },
               ticks: { callback: v => "$" + v.toLocaleString() },
               beginAtZero: true
             }
@@ -439,6 +566,8 @@
 
         const rows = simulate({ startingBalance, apr, months, monthlyCharges, bands });
         renderChart(rows);
+        renderPaymentVsBalanceChart(rows);
+        renderBandChart(bands, startingBalance);
         renderResults(rows);
 
         const finalBalance = rows[rows.length - 1]?.endBalance ?? 0;
