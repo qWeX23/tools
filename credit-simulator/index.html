@@ -111,6 +111,89 @@
     }
     #status.success { background: #d4edda; color: #155724; }
     #status.error { background: #f8d7da; color: #721c24; }
+
+    /* Toggle switch */
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: #e8f4fd;
+      border-radius: 8px;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #667eea;
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+    .toggle-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+    }
+
+    /* Monthly charges section */
+    .monthly-charges-section {
+      margin-top: 16px;
+      padding: 14px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .monthly-charges-section.hidden { display: none; }
+    .monthly-charges-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .month-charge-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .month-charge-item label {
+      font-size: 11px;
+      margin: 0;
+    }
+    .month-charge-item input {
+      padding: 6px 8px;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -142,10 +225,27 @@
             <label>Months to simulate</label>
             <input id="months" type="number" step="1" value="24" />
           </div>
-          <div>
+          <div id="simpleChargesContainer">
             <label>Monthly Charges ($, optional)</label>
             <input id="monthlyCharges" type="number" step="0.01" value="0" />
           </div>
+        </div>
+
+        <div class="toggle-container">
+          <label class="toggle-switch">
+            <input type="checkbox" id="advancedModeToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">Advanced Mode: Specify charges per month</span>
+        </div>
+
+        <div id="monthlyChargesSection" class="monthly-charges-section hidden">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h4 style="margin:0; color:#444;">Monthly Charges Schedule</h4>
+            <button id="fillAllChargesBtn" class="btn-secondary" style="padding:6px 12px; font-size:12px;">Fill All</button>
+          </div>
+          <div class="small" style="margin-top:4px;">Enter different charge amounts for each month</div>
+          <div id="monthlyChargesGrid" class="monthly-charges-grid"></div>
         </div>
 
         <div class="btnbar" style="margin-top:16px;">
@@ -231,6 +331,69 @@
       el.className = "small " + type;
     }
 
+    // ---------- advanced mode / monthly charges ----------
+    let advancedMode = false;
+
+    function toggleAdvancedMode() {
+      advancedMode = $("advancedModeToggle").checked;
+      $("monthlyChargesSection").classList.toggle("hidden", !advancedMode);
+      $("simpleChargesContainer").style.display = advancedMode ? "none" : "block";
+      if (advancedMode) {
+        rebuildMonthlyChargesGrid();
+      }
+      run();
+    }
+
+    function rebuildMonthlyChargesGrid() {
+      const months = parseInt($("months").value || "0", 10);
+      const grid = $("monthlyChargesGrid");
+      const defaultCharge = parseFloat($("monthlyCharges").value || "0");
+
+      // Preserve existing values
+      const existingValues = {};
+      grid.querySelectorAll("input").forEach(inp => {
+        const m = parseInt(inp.dataset.month, 10);
+        existingValues[m] = parseFloat(inp.value || "0");
+      });
+
+      grid.innerHTML = "";
+
+      for (let m = 1; m <= months; m++) {
+        const div = document.createElement("div");
+        div.className = "month-charge-item";
+
+        const value = existingValues[m] !== undefined ? existingValues[m] : defaultCharge;
+
+        div.innerHTML = `
+          <label>Month ${m}</label>
+          <input type="number" step="0.01" value="${value}" data-month="${m}">
+        `;
+
+        div.querySelector("input").addEventListener("input", run);
+        grid.appendChild(div);
+      }
+    }
+
+    function getMonthlyChargesArray() {
+      const charges = [];
+      $("monthlyChargesGrid").querySelectorAll("input").forEach(inp => {
+        charges.push(parseFloat(inp.value || "0"));
+      });
+      return charges;
+    }
+
+    function fillAllCharges() {
+      const value = prompt("Enter charge amount to fill all months:", "0");
+      if (value === null) return;
+      const num = parseFloat(value);
+      if (isNaN(num)) return;
+
+      $("monthlyChargesGrid").querySelectorAll("input").forEach(inp => {
+        inp.value = num;
+      });
+      run();
+    }
+
     // ---------- bands UI ----------
     function addBandRow(lower = 0, pct = 0.0, minPayment = 0) {
       const tr = document.createElement("tr");
@@ -289,7 +452,7 @@
     }
 
     // ---------- simulation ----------
-    function simulate({ startingBalance, apr, months, monthlyCharges, bands }) {
+    function simulate({ startingBalance, apr, months, monthlyCharges, monthlyChargesArray, bands }) {
       const r = apr / 12.0;
       let balance = startingBalance;
       const out = [];
@@ -297,7 +460,10 @@
       for (let m = 1; m <= months; m++) {
         const band = pickBand(bands, balance);
         const interest = balance * r;
-        const charges = monthlyCharges;
+        // Use per-month charges if available, otherwise use flat monthly charge
+        const charges = monthlyChargesArray && monthlyChargesArray[m - 1] !== undefined
+          ? monthlyChargesArray[m - 1]
+          : monthlyCharges;
 
         const rawPayment = band.pct * balance;
         let payment = Math.max(rawPayment, band.minPayment);
@@ -560,11 +726,17 @@
         const monthlyCharges = parseFloat($("monthlyCharges").value || "0");
         const bands = getBands();
 
+        // Get per-month charges if in advanced mode
+        let monthlyChargesArray = null;
+        if (advancedMode) {
+          monthlyChargesArray = getMonthlyChargesArray();
+        }
+
         if (!bands.length) { setStatus("Add at least one band.", "error"); return; }
         if (!(months > 0)) { setStatus("Months must be > 0.", "error"); return; }
         if (!(startingBalance >= 0)) { setStatus("Starting balance must be >= 0.", "error"); return; }
 
-        const rows = simulate({ startingBalance, apr, months, monthlyCharges, bands });
+        const rows = simulate({ startingBalance, apr, months, monthlyCharges, monthlyChargesArray, bands });
         renderChart(rows);
         renderPaymentVsBalanceChart(rows);
         renderBandChart(bands, startingBalance);
@@ -615,9 +787,21 @@
       download("credit_sim.csv", toCsv(rows));
     });
 
+    // Advanced mode toggle
+    $("advancedModeToggle").addEventListener("change", toggleAdvancedMode);
+    $("fillAllChargesBtn").addEventListener("click", fillAllCharges);
+
     // Auto-run on input changes
-    ["startingBalance", "apr", "months", "monthlyCharges"].forEach(id => {
+    ["startingBalance", "apr", "monthlyCharges"].forEach(id => {
       $(id).addEventListener("input", run);
+    });
+
+    // Months input needs to rebuild the grid when in advanced mode
+    $("months").addEventListener("input", () => {
+      if (advancedMode) {
+        rebuildMonthlyChargesGrid();
+      }
+      run();
     });
 
     // Initialize with example data
