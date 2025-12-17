@@ -154,6 +154,8 @@
 
     // ---------- advanced mode / monthly charges ----------
     let advancedMode = false;
+    // Persistent storage for monthly charges - survives month count changes
+    let monthlyChargesStorage = {};
 
     function toggleAdvancedMode() {
       advancedMode = $("advancedModeToggle").checked;
@@ -170,11 +172,10 @@
       const grid = $("monthlyChargesGrid");
       const defaultCharge = parseFloat($("monthlyCharges").value || "0");
 
-      // Preserve existing values
-      const existingValues = {};
+      // Update persistent storage with current values from the grid
       grid.querySelectorAll("input").forEach(inp => {
         const m = parseInt(inp.dataset.month, 10);
-        existingValues[m] = parseFloat(inp.value || "0");
+        monthlyChargesStorage[m] = parseFloat(inp.value || "0");
       });
 
       grid.innerHTML = "";
@@ -183,7 +184,8 @@
         const div = document.createElement("div");
         div.className = "scrollable-grid-item";
 
-        const value = existingValues[m] !== undefined ? existingValues[m] : defaultCharge;
+        // Use stored value if available, otherwise default
+        const value = monthlyChargesStorage[m] !== undefined ? monthlyChargesStorage[m] : defaultCharge;
 
         div.innerHTML = `
           <label>Month ${m}</label>
@@ -594,6 +596,14 @@
       $("apr").value = "0.24";
       $("months").value = "24";
       $("monthlyCharges").value = "0";
+
+      // Clear monthly charges storage and reset legendary mode
+      monthlyChargesStorage = {};
+      advancedMode = false;
+      $("advancedModeToggle").checked = false;
+      $("monthlyChargesSection").classList.add("section--hidden");
+      $("simpleChargesContainer").style.display = "block";
+      $("monthlyChargesGrid").innerHTML = "";
 
       const tbody = $("bandsTable").querySelector("tbody");
       tbody.innerHTML = "";
