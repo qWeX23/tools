@@ -7,134 +7,132 @@
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
-  <div class="page-wrapper page-wrapper--dark">
-    <div class="container animate-fade-in">
-      <a href="../" class="back-link">&larr; Back to Tools</a>
+  <div class="container">
+    <a href="../" class="back-link">&larr; Back to Tools</a>
 
-      <header class="text-center mb-lg">
-        <h1 class="mb-sm">Credit Band Payment Simulator</h1>
-      </header>
+    <header class="mb-lg">
+      <h1>Credit Band Payment Simulator</h1>
+    </header>
 
-      <div class="info-box mb-lg">
-        <strong>Payment Policy:</strong>
-        <code>payment = max(pct(balance) * balance, minPayment(balance))</code>, then capped so you never overpay.
-      </div>
+    <div class="info-box mb-lg">
+      <strong>Payment Policy:</strong>
+      <code>payment = max(pct(balance) * balance, minPayment(balance))</code>, then capped so you never overpay.
+    </div>
 
-      <div class="grid grid--2">
-        <div class="card card--muted">
-          <h3 class="mb-md mt-0">Inputs</h3>
+    <div class="grid grid--2">
+      <div class="card card--muted">
+        <h3 class="mb-md mt-0">Inputs</h3>
 
-          <div class="input-row">
-            <div class="input-group">
-              <label for="startingBalance">Starting Balance ($)</label>
-              <input id="startingBalance" type="number" step="0.01" value="5000">
-            </div>
-            <div class="input-group">
-              <label for="apr">APR (e.g. 0.2499 = 24.99%)</label>
-              <input id="apr" type="number" step="0.0001" value="0.24">
-            </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label for="startingBalance">Starting Balance ($)</label>
+            <input id="startingBalance" type="number" step="0.01" value="5000">
           </div>
-
-          <div class="input-row">
-            <div class="input-group">
-              <label for="months">Months to simulate</label>
-              <input id="months" type="number" step="1" value="24">
-            </div>
-            <div class="input-group" id="simpleChargesContainer">
-              <label for="monthlyCharges">Monthly Charges ($, optional)</label>
-              <input id="monthlyCharges" type="number" step="0.01" value="0">
-            </div>
-          </div>
-
-          <div class="toggle-container">
-            <label class="toggle-switch">
-              <input type="checkbox" id="advancedModeToggle">
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="toggle-label">LEGENDARY Mode: Specify charges per month</span>
-          </div>
-
-          <div id="monthlyChargesSection" class="section section--hidden">
-            <div class="card mt-md">
-              <div class="section-header">
-                <h4>Monthly Charges Schedule</h4>
-                <button id="fillAllChargesBtn" class="btn btn--secondary btn--sm">Fill All</button>
-              </div>
-              <p class="text-small text-muted mt-sm">Enter different charge amounts for each month</p>
-              <div id="monthlyChargesGrid" class="scrollable-grid"></div>
-            </div>
-          </div>
-
-          <div class="btn-group mt-lg">
-            <button id="runBtn" class="btn">Run Simulation</button>
-            <button id="addBandBtn" class="btn btn--secondary">+ Add Band</button>
-            <button id="resetBtn" class="btn btn--danger">Reset Example</button>
-            <button id="downloadCsvBtn" class="btn btn--secondary">Download CSV</button>
-          </div>
-
-          <div class="mt-md">
-            <span id="status" class="status"></span>
-          </div>
-
-          <h3 class="mt-xl mb-sm">Payment Bands</h3>
-          <p class="text-small text-muted mb-md">
-            Rows are matched by "largest lower bound &le; current balance". Keep lower bounds ascending.
-          </p>
-
-          <div style="overflow-x: auto;">
-            <table id="bandsTable">
-              <thead>
-                <tr>
-                  <th>Lower Bound ($)</th>
-                  <th>Pct of Balance</th>
-                  <th>Min Payment ($)</th>
-                  <th class="text-right">Remove</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+          <div class="input-group">
+            <label for="apr">APR (e.g. 0.2499 = 24.99%)</label>
+            <input id="apr" type="number" step="0.0001" value="0.24">
           </div>
         </div>
 
-        <div class="card card--muted">
-          <h3 class="mb-md mt-0">Balance & Payment Over Time</h3>
-          <canvas id="chart" height="260"></canvas>
-          <p id="chartNote" class="chart-note"></p>
+        <div class="input-row">
+          <div class="input-group">
+            <label for="months">Months to simulate</label>
+            <input id="months" type="number" step="1" value="24">
+          </div>
+          <div class="input-group" id="simpleChargesContainer">
+            <label for="monthlyCharges">Monthly Charges ($, optional)</label>
+            <input id="monthlyCharges" type="number" step="0.01" value="0">
+          </div>
         </div>
-      </div>
 
-      <div class="grid grid--2 mt-lg">
-        <div class="card card--muted">
-          <h3 class="mb-md mt-0">Payment vs Balance</h3>
-          <canvas id="paymentVsBalanceChart" height="260"></canvas>
-          <p class="chart-note">Shows how payment amount changes relative to current balance (scatter plot)</p>
+        <div class="toggle-container">
+          <label class="toggle-switch">
+            <input type="checkbox" id="advancedModeToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">LEGENDARY Mode: Specify charges per month</span>
         </div>
-        <div class="card card--muted">
-          <h3 class="mb-md mt-0">Payment Band Schedule</h3>
-          <canvas id="bandChart" height="260"></canvas>
-          <p class="chart-note">Theoretical payment amounts across balance ranges based on your bands</p>
-        </div>
-      </div>
 
-      <div class="card mt-lg">
-        <h3 class="mb-md mt-0">Monthly Results</h3>
+        <div id="monthlyChargesSection" class="section section--hidden">
+          <div class="card mt-md">
+            <div class="section-header">
+              <h4>Monthly Charges Schedule</h4>
+              <button id="fillAllChargesBtn" class="btn btn--secondary btn--sm">Fill All</button>
+            </div>
+            <p class="text-small text-muted mt-sm">Enter different charge amounts for each month</p>
+            <div id="monthlyChargesGrid" class="scrollable-grid"></div>
+          </div>
+        </div>
+
+        <div class="btn-group mt-lg">
+          <button id="runBtn" class="btn">Run Simulation</button>
+          <button id="addBandBtn" class="btn btn--secondary">+ Add Band</button>
+          <button id="resetBtn" class="btn btn--danger">Reset Example</button>
+          <button id="downloadCsvBtn" class="btn btn--secondary">Download CSV</button>
+        </div>
+
+        <div class="mt-md">
+          <span id="status" class="status"></span>
+        </div>
+
+        <h3 class="mt-xl mb-sm">Payment Bands</h3>
+        <p class="text-small text-muted mb-md">
+          Rows are matched by "largest lower bound &le; current balance". Keep lower bounds ascending.
+        </p>
+
         <div style="overflow-x: auto;">
-          <table id="resultsTable">
+          <table id="bandsTable">
             <thead>
               <tr>
-                <th>Month</th>
-                <th>Start Balance</th>
-                <th>Interest</th>
-                <th>Charges</th>
-                <th>Payment</th>
-                <th>End Balance</th>
-                <th>Pct Used</th>
-                <th>Min Payment</th>
+                <th>Lower Bound ($)</th>
+                <th>Pct of Balance</th>
+                <th>Min Payment ($)</th>
+                <th class="text-right">Remove</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
+      </div>
+
+      <div class="card card--muted">
+        <h3 class="mb-md mt-0">Balance & Payment Over Time</h3>
+        <canvas id="chart" height="260"></canvas>
+        <p id="chartNote" class="chart-note"></p>
+      </div>
+    </div>
+
+    <div class="grid grid--2 mt-lg">
+      <div class="card card--muted">
+        <h3 class="mb-md mt-0">Payment vs Balance</h3>
+        <canvas id="paymentVsBalanceChart" height="260"></canvas>
+        <p class="chart-note">Shows how payment amount changes relative to current balance (scatter plot)</p>
+      </div>
+      <div class="card card--muted">
+        <h3 class="mb-md mt-0">Payment Band Schedule</h3>
+        <canvas id="bandChart" height="260"></canvas>
+        <p class="chart-note">Theoretical payment amounts across balance ranges based on your bands</p>
+      </div>
+    </div>
+
+    <div class="card mt-lg">
+      <h3 class="mb-md mt-0">Monthly Results</h3>
+      <div style="overflow-x: auto;">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Start Balance</th>
+              <th>Interest</th>
+              <th>Charges</th>
+              <th>Payment</th>
+              <th>End Balance</th>
+              <th>Pct Used</th>
+              <th>Min Payment</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
   </div>

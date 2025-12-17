@@ -114,25 +114,12 @@ body {
 }
 
 /* ========================================
-   Layout System
+   Layout System - Fullscreen First
    ======================================== */
-.page-wrapper {
-  min-height: 100vh;
-  padding: var(--space-lg);
-}
-
-/* Dark gradient wrapper - for that "terminal" feel */
-.page-wrapper--dark {
-  background: linear-gradient(135deg, var(--color-surface-dark) 0%, var(--color-surface-darker) 100%);
-}
-
 .container {
   max-width: var(--max-width);
   margin: 0 auto;
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-xl);
+  padding: var(--space-xl) var(--space-lg);
 }
 
 .container--narrow {
@@ -814,16 +801,12 @@ footer {
    ======================================== */
 @media (max-width: 768px) {
   :root {
-    --space-lg: 20px;
-    --space-xl: 28px;
-  }
-
-  .page-wrapper {
-    padding: var(--space-md);
+    --space-lg: 16px;
+    --space-xl: 24px;
   }
 
   .container {
-    padding: var(--space-lg);
+    padding: var(--space-lg) var(--space-md);
   }
 
   h1 {
