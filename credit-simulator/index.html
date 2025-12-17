@@ -287,20 +287,22 @@
       const out = [];
 
       for (let m = 1; m <= months; m++) {
-        const band = pickBand(bands, balance);
         const interest = balance * r;
         // Use per-month charges if available, otherwise use flat monthly charge
         const charges = monthlyChargesArray && monthlyChargesArray[m - 1] !== undefined
           ? monthlyChargesArray[m - 1]
           : monthlyCharges;
 
-        const rawPayment = band.pct * balance;
+        // Calculate outstanding balance (before payment) for minimum payment calculation
+        const outstanding = balance + interest + charges;
+        const band = pickBand(bands, outstanding);
+        const rawPayment = band.pct * outstanding;
         let payment = Math.max(rawPayment, band.minPayment);
 
         // cap payment so we never go negative
-        payment = Math.min(payment, balance + interest + charges);
+        payment = Math.min(payment, outstanding);
 
-        const endBalance = Math.max(0, balance + interest + charges - payment);
+        const endBalance = Math.max(0, outstanding - payment);
 
         out.push({
           month: m,
