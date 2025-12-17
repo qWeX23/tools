@@ -314,7 +314,8 @@
         });
 
         balance = endBalance;
-        if (balance === 0) break;
+        // Don't break early - continue simulation even if balance hits 0
+        // because future charges may bring the balance back up
       }
       return out;
     }
@@ -578,7 +579,9 @@
         const rows = simulate({ startingBalance, apr, months, monthlyCharges, monthlyChargesArray, bands });
         renderChart(rows);
         renderPaymentVsBalanceChart(rows);
-        renderBandChart(bands, startingBalance);
+        // Use max balance from simulation (not just startingBalance) for band chart
+        const maxBalanceInSim = Math.max(startingBalance, ...rows.map(r => r.startBalance), ...rows.map(r => r.endBalance));
+        renderBandChart(bands, maxBalanceInSim);
         renderResults(rows);
 
         const finalBalance = rows[rows.length - 1]?.endBalance ?? 0;
