@@ -7,42 +7,44 @@
     <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
-    <div class="container tool-container">
-        <a href="../" class="back-link">← Back to Tools</a>
-        
-        <header>
-            <h1>Example Tool</h1>
-            <p>A demonstration of the folder-based routing structure</p>
-        </header>
-        
-        <main>
-            <div class="tool-content">
-                <h2>How it works</h2>
-                <p>
-                    This is an example tool page. Each tool lives in its own folder, 
-                    making the URL structure clean and organized.
-                </p>
-                
-                <h3>Creating a New Tool</h3>
-                <ol>
-                    <li>Create a new folder in the root directory (e.g., <code>my-tool/</code>)</li>
-                    <li>Add an <code>index.html</code> file in that folder</li>
-                    <li>Link the shared <code>styles.css</code> or create your own</li>
-                    <li>Add a card for your tool in the main <code>index.html</code></li>
-                </ol>
-                
-                <h3>URL Structure</h3>
-                <p>
-                    Your tool will be accessible at: <code>https://yourusername.github.io/tools/folder-name/</code>
-                </p>
-                
-                <div style="margin-top: 30px; padding: 20px; background: white; border-radius: 5px;">
-                    <h3>Interactive Demo</h3>
-                    <p>Click the button to see a simple interaction:</p>
-                    <button class="btn" onclick="alert('This is a working example tool!')">Click Me</button>
+    <div class="page-wrapper page-wrapper--dark">
+        <div class="container container--narrow animate-fade-in">
+            <a href="../" class="back-link">&larr; Back to Tools</a>
+
+            <header>
+                <h1>Example Tool</h1>
+                <p>A demonstration of the folder-based routing structure</p>
+            </header>
+
+            <main>
+                <div class="tool-content">
+                    <h2>How it works</h2>
+                    <p>
+                        This is an example tool page. Each tool lives in its own folder,
+                        making the URL structure clean and organized.
+                    </p>
+
+                    <h3>Creating a New Tool</h3>
+                    <ol>
+                        <li>Create a new folder in the root directory (e.g., <code>my-tool/</code>)</li>
+                        <li>Add an <code>index.html</code> file in that folder</li>
+                        <li>Link the shared <code>styles.css</code> using <code>../styles.css</code></li>
+                        <li>Add a card for your tool in the main <code>index.html</code></li>
+                    </ol>
+
+                    <h3>URL Structure</h3>
+                    <p>
+                        Your tool will be accessible at: <code>https://yourusername.github.io/tools/folder-name/</code>
+                    </p>
+
+                    <div class="demo-box">
+                        <h3>Interactive Demo</h3>
+                        <p>Click the button to see a simple interaction:</p>
+                        <button class="btn" onclick="alert('This is a working example tool!')">Click Me</button>
+                    </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 </body>
 </html>
