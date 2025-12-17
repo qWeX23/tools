@@ -71,6 +71,12 @@
           <button id="downloadCsvBtn" class="btn btn--secondary">Download CSV</button>
         </div>
 
+        <div class="btn-group mt-md">
+          <button id="exportConfigBtn" class="btn btn--secondary">Export Config</button>
+          <button id="importConfigBtn" class="btn btn--secondary">Import Config</button>
+          <input type="file" id="importFileInput" accept=".json" style="display: none;">
+        </div>
+
         <div class="mt-md">
           <span id="status" class="status"></span>
         </div>
@@ -590,6 +596,100 @@
       }
     }
 
+    // ---------- import/export config ----------
+    function exportConfig() {
+      // Sync monthly charges storage with current grid values
+      if (advancedMode) {
+        $("monthlyChargesGrid").querySelectorAll("input").forEach(inp => {
+          const m = parseInt(inp.dataset.month, 10);
+          monthlyChargesStorage[m] = parseFloat(inp.value || "0");
+        });
+      }
+
+      const config = {
+        version: "1.0",
+        startingBalance: parseFloat($("startingBalance").value || "0"),
+        apr: parseFloat($("apr").value || "0"),
+        months: parseInt($("months").value || "0", 10),
+        monthlyCharges: parseFloat($("monthlyCharges").value || "0"),
+        advancedMode: advancedMode,
+        monthlyChargesStorage: advancedMode ? { ...monthlyChargesStorage } : {},
+        bands: getBands()
+      };
+
+      const json = JSON.stringify(config, null, 2);
+      const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "credit_config.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      setStatus("Configuration exported successfully.", "success");
+    }
+
+    function importConfig(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const config = JSON.parse(e.target.result);
+
+          // Validate required fields
+          if (typeof config.startingBalance !== "number" ||
+              typeof config.apr !== "number" ||
+              typeof config.months !== "number" ||
+              !Array.isArray(config.bands)) {
+            throw new Error("Invalid config format");
+          }
+
+          // Apply basic inputs
+          $("startingBalance").value = config.startingBalance;
+          $("apr").value = config.apr;
+          $("months").value = config.months;
+          $("monthlyCharges").value = config.monthlyCharges || 0;
+
+          // Clear existing bands
+          const tbody = $("bandsTable").querySelector("tbody");
+          tbody.innerHTML = "";
+
+          // Add bands from config
+          for (const band of config.bands) {
+            addBandRow(band.lower || 0, band.pct || 0, band.minPayment || 0);
+          }
+
+          // Handle advanced mode
+          if (config.advancedMode && config.monthlyChargesStorage) {
+            monthlyChargesStorage = { ...config.monthlyChargesStorage };
+            advancedMode = true;
+            $("advancedModeToggle").checked = true;
+            $("monthlyChargesSection").classList.remove("section--hidden");
+            $("simpleChargesContainer").style.display = "none";
+            rebuildMonthlyChargesGrid();
+          } else {
+            monthlyChargesStorage = {};
+            advancedMode = false;
+            $("advancedModeToggle").checked = false;
+            $("monthlyChargesSection").classList.add("section--hidden");
+            $("simpleChargesContainer").style.display = "block";
+            $("monthlyChargesGrid").innerHTML = "";
+          }
+
+          run();
+          setStatus("Configuration imported successfully.", "success");
+        } catch (err) {
+          console.error(err);
+          setStatus("Failed to import configuration. Please check the file format.", "error");
+        }
+      };
+      reader.onerror = function() {
+        setStatus("Failed to read file.", "error");
+      };
+      reader.readAsText(file);
+    }
+
     // ---------- init ----------
     function resetExample() {
       $("startingBalance").value = "5000";
@@ -631,6 +731,16 @@
     // Advanced mode toggle
     $("advancedModeToggle").addEventListener("change", toggleAdvancedMode);
     $("fillAllChargesBtn").addEventListener("click", fillAllCharges);
+
+    // Import/Export config
+    $("exportConfigBtn").addEventListener("click", exportConfig);
+    $("importConfigBtn").addEventListener("click", () => $("importFileInput").click());
+    $("importFileInput").addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        importConfig(e.target.files[0]);
+        e.target.value = ""; // Reset so same file can be imported again
+      }
+    });
 
     // Auto-run on input changes
     ["startingBalance", "apr", "monthlyCharges"].forEach(id => {
