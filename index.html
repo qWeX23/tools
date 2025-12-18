@@ -3,148 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found</title>
+    <title>Tools Lab</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        .error-container {
-            min-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .error-code {
-            font-size: 8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1;
-            margin-bottom: var(--space-md);
-            animation: glitch 2.5s infinite;
-        }
-
-        .error-title {
-            font-size: var(--text-2xl);
-            margin-bottom: var(--space-lg);
-        }
-
-        .error-message {
-            font-size: var(--text-lg);
-            color: var(--color-text-muted);
-            max-width: 500px;
-            margin-bottom: var(--space-xl);
-        }
-
-        .lost-astronaut {
-            font-size: 4rem;
-            margin-bottom: var(--space-lg);
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .suggestions {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: var(--space-lg);
-            margin-top: var(--space-xl);
-            max-width: 400px;
-        }
-
-        .suggestions h3 {
-            font-size: var(--text-base);
-            margin-bottom: var(--space-md);
-            color: var(--color-text-muted);
-        }
-
-        .suggestions ul {
-            list-style: none;
-            text-align: left;
-        }
-
-        .suggestions li {
-            padding: var(--space-sm) 0;
-            color: var(--color-text-muted);
-            font-size: var(--text-sm);
-        }
-
-        .suggestions li::before {
-            content: ">";
-            color: var(--color-accent);
-            margin-right: var(--space-sm);
-            font-family: var(--font-mono);
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            25% { transform: translateY(-10px) rotate(5deg); }
-            75% { transform: translateY(10px) rotate(-5deg); }
-        }
-
-        @keyframes glitch {
-            0%, 90%, 100% { opacity: 1; }
-            92% { opacity: 0.8; transform: translateX(-2px); }
-            94% { opacity: 0.6; transform: translateX(2px); }
-            96% { opacity: 0.9; transform: translateX(-1px); }
-        }
-
-        .fun-facts {
-            margin-top: var(--space-xl);
-            font-size: var(--text-sm);
-            color: var(--color-text-subtle);
-            font-style: italic;
-        }
-
-        .blink {
-            animation: blink 1s step-end infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-    </style>
 </head>
 <body>
     <div class="container">
-        <div class="error-container">
-            <div class="lost-astronaut">
-                <span style="display: inline-block; transform: rotate(45deg);">*</span>
-            </div>
+        <header>
+            <h1>tools.lab</h1>
+            <p>A collection of standalone web tools. Built for fun, actually useful.</p>
+        </header>
 
-            <div class="error-code">404</div>
+        <main>
+            <section class="grid grid--auto">
+                <article class="tool-card">
+                    <h2>Example Tool</h2>
+                    <p>A sample tool demonstrating the folder-based routing structure. Start here to add your own.</p>
+                    <a href="example-tool/" class="btn">Open Tool</a>
+                </article>
 
-            <h1 class="error-title">Houston, we have a problem</h1>
-
-            <p class="error-message">
-                The page you're looking for has drifted into the void.
-                It's either been abducted by aliens, eaten by a grue, or simply never existed.
-            </p>
-
-            <a href="example-tool/" class="btn btn--primary btn--lg">
-                Check Out What's Left
-            </a>
-
-            <div class="suggestions">
-                <h3>Things you could do instead:</h3>
-                <ul>
-                    <li>Stare at this page until it changes (it won't)</li>
-                    <li>Blame the developer (always a safe choice)</li>
-                    <li>Check if the internet is still working</li>
-                    <li>Touch some grass</li>
-                    <li>Wonder where all the tools went</li>
-                </ul>
-            </div>
-
-            <p class="fun-facts">
-                <code>console.log("The tools are gone, but the vibes remain")<span class="blink">_</span></code>
-            </p>
-        </div>
+                <!-- Add more tool cards here -->
+            </section>
+        </main>
 
         <footer>
-            <p>Error 404: Productivity Not Found</p>
+            <p>Add your tools by creating a new folder with an index.html file</p>
         </footer>
     </div>
 </body>
