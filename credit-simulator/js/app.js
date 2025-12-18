@@ -3,13 +3,17 @@
  */
 
 (function() {
-  const { $, fmt, setStatus } = window.CreditSim.utils;
-  const { addBandRow, getBands, clearBands } = window.CreditSim.bands;
-  const { simulate } = window.CreditSim.simulation;
-  const { renderChart, renderPaymentVsBalanceChart, renderBandChart } = window.CreditSim.charts;
-  const { renderResults, toCsv, download } = window.CreditSim.results;
-  const { exportConfig, importConfig } = window.CreditSim.config;
-  const charges = window.CreditSim.charges;
+  // Core modules (pure logic - no DOM dependencies)
+  const { fmt, toCsv } = window.CreditSim.core.formatters;
+  const { simulate, calculateSummary } = window.CreditSim.core.simulation;
+
+  // UI modules (DOM-dependent)
+  const { $, setStatus, downloadFile } = window.CreditSim.ui.dom;
+  const { addBandRow, getBandsFromTable, clearBands } = window.CreditSim.ui.bands;
+  const { renderChart, renderPaymentVsBalanceChart, renderBandChart } = window.CreditSim.ui.charts;
+  const { renderResults } = window.CreditSim.ui.results;
+  const { exportConfig, importConfig } = window.CreditSim.ui.config;
+  const charges = window.CreditSim.ui.charges;
 
   // Store last simulation results
   let lastRows = [];
@@ -20,7 +24,7 @@
       const apr = parseFloat($("apr").value || "0");
       const months = parseInt($("months").value || "0", 10);
       const monthlyCharges = parseFloat($("monthlyCharges").value || "0");
-      const bands = getBands();
+      const bands = getBandsFromTable();
 
       // Get per-month charges if in advanced mode
       let monthlyChargesArray = null;
@@ -28,26 +32,30 @@
         monthlyChargesArray = charges.getMonthlyChargesArray();
       }
 
+      // Validation
       if (!bands.length) { setStatus("Add at least one band.", "error"); return; }
       if (!(months > 0)) { setStatus("Months must be > 0.", "error"); return; }
       if (!(startingBalance >= 0)) { setStatus("Starting balance must be >= 0.", "error"); return; }
 
+      // Run simulation (core logic)
       const rows = simulate({ startingBalance, apr, months, monthlyCharges, monthlyChargesArray, bands });
+
+      // Render UI
       renderChart(rows);
       renderPaymentVsBalanceChart(rows);
-      // Use max balance from simulation (not just startingBalance) for band chart
+
+      // Use max balance from simulation for band chart
       const maxBalanceInSim = Math.max(startingBalance, ...rows.map(r => r.startBalance), ...rows.map(r => r.endBalance));
       renderBandChart(bands, maxBalanceInSim);
       renderResults(rows);
 
-      const finalBalance = rows[rows.length - 1]?.endBalance ?? 0;
-      const totalPaid = rows.reduce((sum, r) => sum + r.payment, 0);
-      const totalInterest = rows.reduce((sum, r) => sum + r.interest, 0);
-
+      // Calculate and display summary
+      const summary = calculateSummary(rows);
       setStatus(
-        `Simulated ${rows.length} month(s). Final balance: $${fmt(finalBalance)} | Total paid: $${fmt(totalPaid)} | Total interest: $${fmt(totalInterest)}`,
+        `Simulated ${rows.length} month(s). Final balance: $${fmt(summary.finalBalance)} | Total paid: $${fmt(summary.totalPaid)} | Total interest: $${fmt(summary.totalInterest)}`,
         "success"
       );
+
       lastRows = rows;
     } catch (e) {
       console.error(e);
@@ -61,13 +69,9 @@
     $("months").value = "24";
     $("monthlyCharges").value = "0";
 
-    // Clear monthly charges storage and reset legendary mode
+    // Clear monthly charges storage and reset advanced mode
     charges.clearMonthlyChargesStorage();
-    charges.setAdvancedMode(false);
-    $("advancedModeToggle").checked = false;
-    $("monthlyChargesSection").classList.add("section--hidden");
-    $("simpleChargesContainer").style.display = "block";
-    $("monthlyChargesGrid").innerHTML = "";
+    charges.resetAdvancedModeUI();
 
     clearBands();
 
@@ -88,7 +92,7 @@
     $("resetBtn").addEventListener("click", resetExample);
     $("downloadCsvBtn").addEventListener("click", () => {
       if (!lastRows.length) return setStatus("Run simulation first.", "error");
-      download("credit_sim.csv", toCsv(lastRows));
+      downloadFile("credit_sim.csv", toCsv(lastRows));
     });
 
     // Advanced mode toggle
@@ -122,7 +126,7 @@
     resetExample();
   }
 
-  // Export run function for other modules that need it
+  // Export for potential external use
   window.CreditSim = window.CreditSim || {};
   window.CreditSim.app = {
     run,

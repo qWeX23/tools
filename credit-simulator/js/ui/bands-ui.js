@@ -1,10 +1,14 @@
 /**
- * bands.js - Payment bands UI management
+ * ui/bands-ui.js - Payment bands UI management
  */
 
 (function() {
-  const { $ } = window.CreditSim.utils;
+  const { $ } = window.CreditSim.ui.dom;
+  const { validateBands } = window.CreditSim.core.bandsLogic;
 
+  /**
+   * Add a new band row to the table
+   */
   function addBandRow(lower = 0, pct = 0.0, minPayment = 0, onRun) {
     const tr = document.createElement("tr");
 
@@ -24,7 +28,7 @@
       if (onRun) onRun();
     });
 
-    // auto-run on edits
+    // Auto-run on edits
     [tdLower, tdPct, tdMin].forEach(td => {
       td.querySelector("input").addEventListener("input", () => {
         if (onRun) onRun();
@@ -39,7 +43,10 @@
     $("bandsTable").querySelector("tbody").appendChild(tr);
   }
 
-  function getBands() {
+  /**
+   * Extract bands data from the table
+   */
+  function getBandsFromTable() {
     const rows = [...$("bandsTable").querySelector("tbody").querySelectorAll("tr")];
     const bands = rows.map(tr => {
       const inputs = tr.querySelectorAll("input");
@@ -48,32 +55,23 @@
         pct: parseFloat(inputs[1].value || "0"),
         minPayment: parseFloat(inputs[2].value || "0")
       };
-    }).filter(b => !Number.isNaN(b.lower) && !Number.isNaN(b.pct) && !Number.isNaN(b.minPayment));
-
-    bands.sort((a, b) => a.lower - b.lower);
-    return bands;
+    });
+    return validateBands(bands);
   }
 
-  function pickBand(bands, balance) {
-    let chosen = bands[0];
-    for (const b of bands) {
-      if (balance >= b.lower) chosen = b;
-      else break;
-    }
-    return chosen;
-  }
-
+  /**
+   * Clear all bands from the table
+   */
   function clearBands() {
     const tbody = $("bandsTable").querySelector("tbody");
     tbody.innerHTML = "";
   }
 
   // Export
-  window.CreditSim = window.CreditSim || {};
-  window.CreditSim.bands = {
+  window.CreditSim.ui = window.CreditSim.ui || {};
+  window.CreditSim.ui.bands = {
     addBandRow,
-    getBands,
-    pickBand,
+    getBandsFromTable,
     clearBands
   };
 })();

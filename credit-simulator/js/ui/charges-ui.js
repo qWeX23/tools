@@ -1,9 +1,9 @@
 /**
- * charges.js - Advanced mode / monthly charges management
+ * ui/charges-ui.js - Monthly charges UI management
  */
 
 (function() {
-  const { $, setStatus } = window.CreditSim.utils;
+  const { $ } = window.CreditSim.ui.dom;
 
   // State
   let advancedMode = false;
@@ -19,11 +19,11 @@
   }
 
   function getMonthlyChargesStorage() {
-    return monthlyChargesStorage;
+    return { ...monthlyChargesStorage };
   }
 
   function setMonthlyChargesStorage(storage) {
-    monthlyChargesStorage = storage;
+    monthlyChargesStorage = { ...storage };
   }
 
   function clearMonthlyChargesStorage() {
@@ -99,9 +99,24 @@
     });
   }
 
+  function resetAdvancedModeUI() {
+    advancedMode = false;
+    $("advancedModeToggle").checked = false;
+    $("monthlyChargesSection").classList.add("section--hidden");
+    $("simpleChargesContainer").style.display = "block";
+    $("monthlyChargesGrid").innerHTML = "";
+  }
+
+  function enableAdvancedModeUI() {
+    advancedMode = true;
+    $("advancedModeToggle").checked = true;
+    $("monthlyChargesSection").classList.remove("section--hidden");
+    $("simpleChargesContainer").style.display = "none";
+  }
+
   // Export
-  window.CreditSim = window.CreditSim || {};
-  window.CreditSim.charges = {
+  window.CreditSim.ui = window.CreditSim.ui || {};
+  window.CreditSim.ui.charges = {
     isAdvancedMode,
     setAdvancedMode,
     getMonthlyChargesStorage,
@@ -111,6 +126,8 @@
     rebuildMonthlyChargesGrid,
     getMonthlyChargesArray,
     fillAllCharges,
-    syncStorageFromGrid
+    syncStorageFromGrid,
+    resetAdvancedModeUI,
+    enableAdvancedModeUI
   };
 })();

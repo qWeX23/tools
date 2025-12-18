@@ -1,11 +1,11 @@
 /**
- * config.js - Import/export configuration
+ * ui/config.js - Configuration import/export
  */
 
 (function() {
-  const { $, setStatus } = window.CreditSim.utils;
-  const { getBands, addBandRow, clearBands } = window.CreditSim.bands;
-  const charges = window.CreditSim.charges;
+  const { $, setStatus, downloadFile } = window.CreditSim.ui.dom;
+  const { getBandsFromTable, addBandRow, clearBands } = window.CreditSim.ui.bands;
+  const charges = window.CreditSim.ui.charges;
 
   function exportConfig() {
     // Sync monthly charges storage with current grid values
@@ -20,21 +20,12 @@
       months: parseInt($("months").value || "0", 10),
       monthlyCharges: parseFloat($("monthlyCharges").value || "0"),
       advancedMode: charges.isAdvancedMode(),
-      monthlyChargesStorage: charges.isAdvancedMode() ? { ...charges.getMonthlyChargesStorage() } : {},
-      bands: getBands()
+      monthlyChargesStorage: charges.isAdvancedMode() ? charges.getMonthlyChargesStorage() : {},
+      bands: getBandsFromTable()
     };
 
     const json = JSON.stringify(config, null, 2);
-    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "credit_config.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-
+    downloadFile("credit_config.json", json, "application/json;charset=utf-8");
     setStatus("Configuration exported successfully.", "success");
   }
 
@@ -68,19 +59,12 @@
 
         // Handle advanced mode
         if (config.advancedMode && config.monthlyChargesStorage) {
-          charges.setMonthlyChargesStorage({ ...config.monthlyChargesStorage });
-          charges.setAdvancedMode(true);
-          $("advancedModeToggle").checked = true;
-          $("monthlyChargesSection").classList.remove("section--hidden");
-          $("simpleChargesContainer").style.display = "none";
+          charges.setMonthlyChargesStorage(config.monthlyChargesStorage);
+          charges.enableAdvancedModeUI();
           charges.rebuildMonthlyChargesGrid(onRun);
         } else {
           charges.clearMonthlyChargesStorage();
-          charges.setAdvancedMode(false);
-          $("advancedModeToggle").checked = false;
-          $("monthlyChargesSection").classList.add("section--hidden");
-          $("simpleChargesContainer").style.display = "block";
-          $("monthlyChargesGrid").innerHTML = "";
+          charges.resetAdvancedModeUI();
         }
 
         if (onRun) onRun();
@@ -97,8 +81,8 @@
   }
 
   // Export
-  window.CreditSim = window.CreditSim || {};
-  window.CreditSim.config = {
+  window.CreditSim.ui = window.CreditSim.ui || {};
+  window.CreditSim.ui.config = {
     exportConfig,
     importConfig
   };

@@ -1,10 +1,11 @@
 /**
- * charts.js - Chart rendering functions
+ * ui/charts.js - Chart rendering (Chart.js dependent)
  */
 
 (function() {
-  const { $, fmt } = window.CreditSim.utils;
-  const { pickBand } = window.CreditSim.bands;
+  const { $ } = window.CreditSim.ui.dom;
+  const { fmt } = window.CreditSim.core.formatters;
+  const { pickBand } = window.CreditSim.core.bandsLogic;
 
   // Chart instances
   let chart = null;
@@ -194,8 +195,8 @@
   }
 
   // Export
-  window.CreditSim = window.CreditSim || {};
-  window.CreditSim.charts = {
+  window.CreditSim.ui = window.CreditSim.ui || {};
+  window.CreditSim.ui.charts = {
     renderChart,
     renderPaymentVsBalanceChart,
     renderBandChart,
