@@ -13,12 +13,17 @@
       charges.syncStorageFromGrid();
     }
 
+    const startingBalanceEl = $("startingBalance");
+    const aprEl = $("apr");
+    const monthsEl = $("months");
+    const monthlyChargesEl = $("monthlyCharges");
+
     const config = {
       version: "1.0",
-      startingBalance: parseFloat($("startingBalance").value || "0"),
-      apr: parseFloat($("apr").value || "0"),
-      months: parseInt($("months").value || "0", 10),
-      monthlyCharges: parseFloat($("monthlyCharges").value || "0"),
+      startingBalance: startingBalanceEl ? parseFloat(startingBalanceEl.value || "0") : 0,
+      apr: aprEl ? parseFloat(aprEl.value || "0") : 0,
+      months: monthsEl ? parseInt(monthsEl.value || "0", 10) : 0,
+      monthlyCharges: monthlyChargesEl ? parseFloat(monthlyChargesEl.value || "0") : 0,
       advancedMode: charges.isAdvancedMode(),
       monthlyChargesStorage: charges.isAdvancedMode() ? charges.getMonthlyChargesStorage() : {},
       bands: getBandsFromTable()
@@ -44,10 +49,15 @@
         }
 
         // Apply basic inputs
-        $("startingBalance").value = config.startingBalance;
-        $("apr").value = config.apr;
-        $("months").value = config.months;
-        $("monthlyCharges").value = config.monthlyCharges || 0;
+        const startingBalanceEl = $("startingBalance");
+        const aprEl = $("apr");
+        const monthsEl = $("months");
+        const monthlyChargesEl = $("monthlyCharges");
+
+        if (startingBalanceEl) startingBalanceEl.value = config.startingBalance;
+        if (aprEl) aprEl.value = config.apr;
+        if (monthsEl) monthsEl.value = config.months;
+        if (monthlyChargesEl) monthlyChargesEl.value = config.monthlyCharges || 0;
 
         // Clear existing bands
         clearBands();

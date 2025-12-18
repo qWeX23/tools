@@ -40,14 +40,21 @@
     tr.appendChild(tdMin);
     tr.appendChild(tdRm);
 
-    $("bandsTable").querySelector("tbody").appendChild(tr);
+    const table = $("bandsTable");
+    if (!table) return;
+    const tbody = table.querySelector("tbody");
+    if (tbody) tbody.appendChild(tr);
   }
 
   /**
    * Extract bands data from the table
    */
   function getBandsFromTable() {
-    const rows = [...$("bandsTable").querySelector("tbody").querySelectorAll("tr")];
+    const table = $("bandsTable");
+    if (!table) return [];
+    const tbody = table.querySelector("tbody");
+    if (!tbody) return [];
+    const rows = [...tbody.querySelectorAll("tr")];
     const bands = rows.map(tr => {
       const inputs = tr.querySelectorAll("input");
       return {
@@ -63,8 +70,10 @@
    * Clear all bands from the table
    */
   function clearBands() {
-    const tbody = $("bandsTable").querySelector("tbody");
-    tbody.innerHTML = "";
+    const table = $("bandsTable");
+    if (!table) return;
+    const tbody = table.querySelector("tbody");
+    if (tbody) tbody.innerHTML = "";
   }
 
   // Export

@@ -24,17 +24,20 @@
   };
 
   function renderBalanceChart(rows) {
-    const ctx = $("balanceChart").getContext("2d");
+    const canvas = $("balanceChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
     const labels = rows.map(r => `M${r.month}`);
     const balance = rows.map(r => r.endBalance);
 
     if (balanceChart) balanceChart.destroy();
+    const chartNote = $("chartNote");
     if (!window.Chart) {
-      $("chartNote").textContent = "Chart.js failed to load (CDN blocked?). You can still use the results table below.";
+      if (chartNote) chartNote.textContent = "Chart.js failed to load (CDN blocked?). You can still use the results table below.";
       return;
     }
 
-    $("chartNote").textContent = "";
+    if (chartNote) chartNote.textContent = "";
 
     balanceChart = new Chart(ctx, {
       type: "line",
@@ -75,7 +78,9 @@
   }
 
   function renderPaymentChart(rows) {
-    const ctx = $("paymentChart").getContext("2d");
+    const canvas = $("paymentChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
     const labels = rows.map(r => `M${r.month}`);
     const payment = rows.map(r => r.payment);
 
@@ -121,7 +126,9 @@
   }
 
   function renderPaymentVsBalanceChart(rows) {
-    const ctx = $("paymentVsBalanceChart").getContext("2d");
+    const canvas = $("paymentVsBalanceChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
 
     if (paymentVsBalanceChart) paymentVsBalanceChart.destroy();
     if (!window.Chart) return;
@@ -174,7 +181,9 @@
   }
 
   function renderBandChart(bands, maxBalance) {
-    const ctx = $("bandChart").getContext("2d");
+    const canvas = $("bandChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
 
     if (bandChart) bandChart.destroy();
     if (!window.Chart || !bands.length) return;
