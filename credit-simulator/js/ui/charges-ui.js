@@ -31,9 +31,13 @@
   }
 
   function toggleAdvancedMode(onRun) {
-    advancedMode = $("advancedModeToggle").checked;
-    $("monthlyChargesSection").classList.toggle("section--hidden", !advancedMode);
-    $("simpleChargesContainer").style.display = advancedMode ? "none" : "block";
+    const toggle = $("advancedModeToggle");
+    const section = $("monthlyChargesSection");
+    const simpleContainer = $("simpleChargesContainer");
+
+    advancedMode = toggle ? toggle.checked : false;
+    if (section) section.classList.toggle("section--hidden", !advancedMode);
+    if (simpleContainer) simpleContainer.style.display = advancedMode ? "none" : "block";
     if (advancedMode) {
       rebuildMonthlyChargesGrid(onRun);
     }
@@ -41,9 +45,14 @@
   }
 
   function rebuildMonthlyChargesGrid(onRun) {
-    const months = parseInt($("months").value || "0", 10);
+    const monthsEl = $("months");
     const grid = $("monthlyChargesGrid");
-    const defaultCharge = parseFloat($("monthlyCharges").value || "0");
+    const chargesEl = $("monthlyCharges");
+
+    if (!grid) return;
+
+    const months = monthsEl ? parseInt(monthsEl.value || "0", 10) : 0;
+    const defaultCharge = chargesEl ? parseFloat(chargesEl.value || "0") : 0;
 
     // Update persistent storage with current values from the grid
     grid.querySelectorAll("input").forEach(inp => {
@@ -74,9 +83,12 @@
 
   function getMonthlyChargesArray() {
     const charges = [];
-    $("monthlyChargesGrid").querySelectorAll("input").forEach(inp => {
-      charges.push(parseFloat(inp.value || "0"));
-    });
+    const grid = $("monthlyChargesGrid");
+    if (grid) {
+      grid.querySelectorAll("input").forEach(inp => {
+        charges.push(parseFloat(inp.value || "0"));
+      });
+    }
     return charges;
   }
 
@@ -86,32 +98,47 @@
     const num = parseFloat(value);
     if (isNaN(num)) return;
 
-    $("monthlyChargesGrid").querySelectorAll("input").forEach(inp => {
-      inp.value = num;
-    });
+    const grid = $("monthlyChargesGrid");
+    if (grid) {
+      grid.querySelectorAll("input").forEach(inp => {
+        inp.value = num;
+      });
+    }
     if (onRun) onRun();
   }
 
   function syncStorageFromGrid() {
-    $("monthlyChargesGrid").querySelectorAll("input").forEach(inp => {
-      const m = parseInt(inp.dataset.month, 10);
-      monthlyChargesStorage[m] = parseFloat(inp.value || "0");
-    });
+    const grid = $("monthlyChargesGrid");
+    if (grid) {
+      grid.querySelectorAll("input").forEach(inp => {
+        const m = parseInt(inp.dataset.month, 10);
+        monthlyChargesStorage[m] = parseFloat(inp.value || "0");
+      });
+    }
   }
 
   function resetAdvancedModeUI() {
     advancedMode = false;
-    $("advancedModeToggle").checked = false;
-    $("monthlyChargesSection").classList.add("section--hidden");
-    $("simpleChargesContainer").style.display = "block";
-    $("monthlyChargesGrid").innerHTML = "";
+    const toggle = $("advancedModeToggle");
+    const section = $("monthlyChargesSection");
+    const simpleContainer = $("simpleChargesContainer");
+    const grid = $("monthlyChargesGrid");
+
+    if (toggle) toggle.checked = false;
+    if (section) section.classList.add("section--hidden");
+    if (simpleContainer) simpleContainer.style.display = "block";
+    if (grid) grid.innerHTML = "";
   }
 
   function enableAdvancedModeUI() {
     advancedMode = true;
-    $("advancedModeToggle").checked = true;
-    $("monthlyChargesSection").classList.remove("section--hidden");
-    $("simpleChargesContainer").style.display = "none";
+    const toggle = $("advancedModeToggle");
+    const section = $("monthlyChargesSection");
+    const simpleContainer = $("simpleChargesContainer");
+
+    if (toggle) toggle.checked = true;
+    if (section) section.classList.remove("section--hidden");
+    if (simpleContainer) simpleContainer.style.display = "none";
   }
 
   // Export

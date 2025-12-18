@@ -7,7 +7,10 @@
   const { fmt } = window.CreditSim.core.formatters;
 
   function renderResults(rows) {
-    const tbody = $("resultsTable").querySelector("tbody");
+    const table = $("resultsTable");
+    if (!table) return;
+    const tbody = table.querySelector("tbody");
+    if (!tbody) return;
     tbody.innerHTML = "";
 
     for (const r of rows) {
