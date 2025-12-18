@@ -8,7 +8,8 @@
   const { pickBand } = window.CreditSim.core.bandsLogic;
 
   // Chart instances
-  let chart = null;
+  let balanceChart = null;
+  let paymentChart = null;
   let paymentVsBalanceChart = null;
   let bandChart = null;
 
@@ -22,13 +23,12 @@
     purpleGlow: 'rgba(167, 139, 250, 0.15)'
   };
 
-  function renderChart(rows) {
-    const ctx = $("chart").getContext("2d");
+  function renderBalanceChart(rows) {
+    const ctx = $("balanceChart").getContext("2d");
     const labels = rows.map(r => `M${r.month}`);
     const balance = rows.map(r => r.endBalance);
-    const payment = rows.map(r => r.payment);
 
-    if (chart) chart.destroy();
+    if (balanceChart) balanceChart.destroy();
     if (!window.Chart) {
       $("chartNote").textContent = "Chart.js failed to load (CDN blocked?). You can still use the results table below.";
       return;
@@ -36,7 +36,7 @@
 
     $("chartNote").textContent = "";
 
-    chart = new Chart(ctx, {
+    balanceChart = new Chart(ctx, {
       type: "line",
       data: {
         labels,
@@ -48,7 +48,45 @@
             borderColor: chartColors.accent,
             backgroundColor: chartColors.accentGlow,
             fill: true
-          },
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return "Balance: $" + fmt(context.parsed.y);
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            ticks: { callback: v => "$" + v.toLocaleString() },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+
+  function renderPaymentChart(rows) {
+    const ctx = $("paymentChart").getContext("2d");
+    const labels = rows.map(r => `M${r.month}`);
+    const payment = rows.map(r => r.payment);
+
+    if (paymentChart) paymentChart.destroy();
+    if (!window.Chart) return;
+
+    paymentChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
           {
             label: "Payment",
             data: payment,
@@ -63,11 +101,11 @@
         responsive: true,
         interaction: { mode: "index", intersect: false },
         plugins: {
-          legend: { position: "top" },
+          legend: { display: false },
           tooltip: {
             callbacks: {
               label: function(context) {
-                return context.dataset.label + ": $" + fmt(context.parsed.y);
+                return "Payment: $" + fmt(context.parsed.y);
               }
             }
           }
@@ -197,7 +235,8 @@
   // Export
   window.CreditSim.ui = window.CreditSim.ui || {};
   window.CreditSim.ui.charts = {
-    renderChart,
+    renderBalanceChart,
+    renderPaymentChart,
     renderPaymentVsBalanceChart,
     renderBandChart,
     chartColors
