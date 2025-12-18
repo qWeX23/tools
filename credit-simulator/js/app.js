@@ -10,7 +10,7 @@
   // UI modules (DOM-dependent)
   const { $, setStatus, downloadFile } = window.CreditSim.ui.dom;
   const { addBandRow, getBandsFromTable, clearBands } = window.CreditSim.ui.bands;
-  const { renderChart, renderPaymentVsBalanceChart, renderBandChart } = window.CreditSim.ui.charts;
+  const { renderBalanceChart, renderPaymentChart, renderPaymentVsBalanceChart, renderBandChart } = window.CreditSim.ui.charts;
   const { renderResults } = window.CreditSim.ui.results;
   const { exportConfig, importConfig } = window.CreditSim.ui.config;
   const charges = window.CreditSim.ui.charges;
@@ -41,7 +41,8 @@
       const rows = simulate({ startingBalance, apr, months, monthlyCharges, monthlyChargesArray, bands });
 
       // Render UI
-      renderChart(rows);
+      renderBalanceChart(rows);
+      renderPaymentChart(rows);
       renderPaymentVsBalanceChart(rows);
 
       // Use max balance from simulation for band chart
