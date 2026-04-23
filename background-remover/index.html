@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Remover - Transparent PNG</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .drop-zone:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .drop-zone.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .drop-zone-text {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .drop-zone-subtext {
+            color: #999;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .controls {
+            margin: 30px 0;
+            display: none;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .hex-input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            width: 100px;
+            text-transform: uppercase;
+            transition: border-color 0.3s;
+        }
+
+        .hex-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .eyedropper-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            flex-grow: 0;
+        }
+
+        .eyedropper-btn:hover {
+            background: #764ba2;
+        }
+
+        .eyedropper-btn.active {
+            background: #48bb78;
+        }
+
+        canvas.eyedropper-active {
+            cursor: crosshair;
+        }
+
+        canvas.eraser-active {
+            cursor: none;
+        }
+
+        .eraser-btn {
+            padding: 8px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            flex-grow: 0;
+        }
+
+        .eraser-btn:hover {
+            background: #dc2626;
+        }
+
+        .eraser-btn.active {
+            background: #16a34a;
+        }
+
+        .brush-size-control {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .brush-size-control.visible {
+            display: block;
+        }
+
+        .checkered-mode-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 10px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checkered-mode-toggle label {
+            margin: 0;
+            font-size: 12px;
+            cursor: pointer;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .bg-toggle-wrapper {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .bg-toggle-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .bg-toggle-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .bg-toggle-btn {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .bg-toggle-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        #processedCanvas.bg-dark {
+            background: #2d3748 !important;
+        }
+
+        #processedCanvas.bg-color {
+            background: #ff6b9d !important;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .tolerance-value {
+            display: inline-block;
+            margin-left: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .canvas-container {
+            margin: 30px 0;
+            display: none;
+        }
+
+        .image-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .image-panel {
+            text-align: center;
+            position: relative;
+        }
+
+        .image-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        #originalCanvas {
+            background: white;
+        }
+
+        #processedCanvas {
+            background-image: 
+                linear-gradient(45deg, #ccc 25%, transparent 25%), 
+                linear-gradient(-45deg, #ccc 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #ccc 75%), 
+                linear-gradient(-45deg, transparent 75%, #ccc 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        @media (max-width: 768px) {
+            .image-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e5e5;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .gif-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border: 2px solid #667eea;
+            display: none;
+        }
+
+        .gif-section.visible {
+            display: block;
+        }
+
+        .gif-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .animation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .animation-option {
+            padding: 12px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .animation-option:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .animation-option.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .gif-preview {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .gif-preview img {
+            max-width: 200px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .generating {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../" class="back-link">&larr; Back to Tools</a>
+
+        <h1>Background Remover</h1>
+        <p class="subtitle">Remove backgrounds and create transparent PNGs instantly</p>
+
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-text">Drop an image here or click to browse</div>
+            <div class="drop-zone-subtext">Supports PNG, JPG, and JPEG formats</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*">
+
+        <div class="controls" id="controls">
+            <div class="control-group">
+                <label>Select Color to Remove:</label>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="colorPicker" value="#ffffff">
+                    <input type="text" id="hexInput" class="hex-input" value="#FFFFFF" maxlength="7" placeholder="#FFFFFF">
+                    <button type="button" id="eyedropperBtn" class="eyedropper-btn">
+                        <span>&#128065;</span> Pick from Image
+                    </button>
+                </div>
+                <div class="checkered-mode-toggle">
+                    <input type="checkbox" id="checkeredMode">
+                    <label for="checkeredMode">Remove AI Fake Checkered Background</label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>
+                    Tolerance: <span class="tolerance-value" id="toleranceValue">2</span>
+                </label>
+                <input type="range" id="tolerance" min="0" max="100" value="2">
+            </div>
+
+            <div class="control-group">
+                <label>Manual Touch-up:</label>
+                <div class="color-picker-wrapper">
+                    <button type="button" id="eraserBtn" class="eraser-btn">
+                        <span>&#9998;</span> Erase Tool
+                    </button>
+                </div>
+                <div class="brush-size-control" id="brushSizeControl">
+                    <label>
+                        Brush Size: <span class="tolerance-value" id="brushSizeValue">20</span>px
+                    </label>
+                    <input type="range" id="brushSize" min="5" max="100" value="20">
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container" id="canvasContainer">
+            <div class="image-comparison">
+                <div class="image-panel">
+                    <div class="image-label">Original</div>
+                    <canvas id="originalCanvas"></canvas>
+                </div>
+                <div class="image-panel">
+                    <div class="image-label">Transparent</div>
+                    <canvas id="processedCanvas"></canvas>
+                    <div class="bg-toggle-wrapper">
+                        <div class="bg-toggle-label">Background Preview:</div>
+                        <div class="bg-toggle-buttons">
+                            <button class="bg-toggle-btn active" data-bg="checkered">Checkered</button>
+                            <button class="bg-toggle-btn" data-bg="dark">Dark</button>
+                            <button class="bg-toggle-btn" data-bg="color">Pink</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn-success" id="downloadBtn">Download PNG</button>
+                <button class="btn-warning" id="makeGifBtn">Make Animated GIF</button>
+                <button class="btn-secondary" id="resetBtn">Load New Image</button>
+            </div>
+
+            <div class="gif-section" id="gifSection">
+                <h3>Animate Your Transparent Image</h3>
+                <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Select an animation effect:</p>
+                
+                <div class="animation-grid">
+                    <div class="animation-option" data-anim="party">Party</div>
+                    <div class="animation-option" data-anim="panic">Panic</div>
+                    <div class="animation-option" data-anim="zoom">Zoom</div>
+                    <div class="animation-option" data-anim="bounce">Bounce</div>
+                    <div class="animation-option" data-anim="intense">Intense</div>
+                    <div class="animation-option" data-anim="approach">Approach</div>
+                </div>
+
+                <div class="gif-preview" id="gifPreview"></div>
+
+                <div class="button-group">
+                    <button class="btn-success" id="downloadGifBtn" style="display:none;">Download GIF</button>
+                    <button class="btn-secondary" id="cancelGifBtn">Back to PNG</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Embedded GIF encoder library (gifenc) - no external dependencies
+        var __defProp=Object.defineProperty,__markAsModule=e=>__defProp(e,"__esModule",{value:!0}),__export=(e,t)=>{for(var r in t)__defProp(e,r,{get:t[r],enumerable:!0})};__markAsModule(exports={});__export(exports,{GIFEncoder:()=>GIFEncoder,applyPalette:()=>applyPalette,default:()=>src_default,nearestColor:()=>nearestColor,nearestColorIndex:()=>nearestColorIndex,nearestColorIndexWithDistance:()=>nearestColorIndexWithDistance,prequantize:()=>prequantize,quantize:()=>quantize,snapColorsToPalette:()=>snapColorsToPalette});var constants_default={signature:"GIF",version:"89a",trailer:59,extensionIntroducer:33,applicationExtensionLabel:255,graphicControlExtensionLabel:249,imageSeparator:44,signatureSize:3,versionSize:3,globalColorTableFlagMask:128,colorResolutionMask:112,sortFlagMask:8,globalColorTableSizeMask:7,applicationIdentifierSize:8,applicationAuthCodeSize:3,disposalMethodMask:28,userInputFlagMask:2,transparentColorFlagMask:1,localColorTableFlagMask:128,interlaceFlagMask:64,idSortFlagMask:32,localColorTableSizeMask:7};function createStream(e=256){let t=0,r=new Uint8Array(e);return{get buffer(){return r.buffer},reset(){t=0},bytesView:()=>r.subarray(0,t),bytes:()=>r.slice(0,t),writeByte(e){n(t+1),r[t]=e,t++},writeBytes(e,o=0,a=e.length){n(t+a);for(let n=0;n<a;n++)r[t++]=e[n+o]},writeBytesView(e,o=0,a=e.byteLength){n(t+a),r.set(e.subarray(o,o+a),t),t+=a}};function n(e){var n=r.length;if(n>=e)return;e=Math.max(e,n*(n<1048576?2:1.125)>>>0),0!=n&&(e=Math.max(e,256));const o=r;r=new Uint8Array(e),t>0&&r.set(o.subarray(0,t),0)}}var BITS=12,DEFAULT_HSIZE=5003,MASKS=[0,1,3,7,15,31,63,127,255,511,1023,2047,4095,8191,16383,32767,65535];function lzwEncode(e,t,r,n,o=createStream(512),a=new Uint8Array(256),i=new Int32Array(DEFAULT_HSIZE),c=new Int32Array(DEFAULT_HSIZE)){const l=i.length,s=Math.max(2,n);a.fill(0),c.fill(0),i.fill(-1);let f=0,u=0;const w=s+1,d=w;let b=!1,g=d,y=(1<<g)-1;const p=1<<w-1,h=p+1;let B=p+2,_=0,m=r[0],I=0;for(let e=l;e<65536;e*=2)++I;I=8-I,o.writeByte(s),S(p);const A=r.length;for(let e=1;e<A;e++)e:{const t=r[e],n=(t<<BITS)+m;let o=t<<I^m;if(i[o]===n){m=c[o];break e}const a=0===o?1:l-o;for(;i[o]>=0;)if(o-=a,o<0&&(o+=l),i[o]===n){m=c[o];break e}S(m),m=t,B<1<<BITS?(c[o]=B++,i[o]=n):(i.fill(-1),B=p+2,b=!0,S(p))}return S(m),S(h),o.writeByte(0),o.bytesView();function S(e){for(f&=MASKS[u],u>0?f|=e<<u:f=e,u+=g;u>=8;)a[_++]=255&f,_>=254&&(o.writeByte(_),o.writeBytesView(a,0,_),_=0),f>>=8,u-=8;if((B>y||b)&&(b?(g=d,y=(1<<g)-1,b=!1):(++g,y=g===BITS?1<<g:(1<<g)-1)),e==h){for(;u>0;)a[_++]=255&f,_>=254&&(o.writeByte(_),o.writeBytesView(a,0,_),_=0),f>>=8,u-=8;_>0&&(o.writeByte(_),o.writeBytesView(a,0,_),_=0)}}}var lzwEncode_default=lzwEncode;function rgb888_to_rgb565(e,t,r){return e<<8&63488|t<<2&992|r>>3}function rgba8888_to_rgba4444(e,t,r,n){return e>>4|240&t|(240&r)<<4|(240&n)<<8}function rgb888_to_rgb444(e,t,r){return e>>4<<8|240&t|r>>4}function clamp(e,t,r){return e<t?t:e>r?r:e}function sqr(e){return e*e}function find_nn(e,t,r){var n=0,o=1e100;const a=e[t],i=a.cnt,c=a.ac,l=a.rc,s=a.gc,f=a.bc;for(var u=a.fw;0!=u;u=e[u].fw){const t=e[u],a=t.cnt,d=i*a/(i+a);if(!(d>=o)){var w=0;r&&(w+=d*sqr(t.ac-c))>=o||(w+=d*sqr(t.rc-l))>=o||(w+=d*sqr(t.gc-s))>=o||(w+=d*sqr(t.bc-f))>=o||(o=w,n=u)}}a.err=o,a.nn=n}function create_bin(){return{ac:0,rc:0,gc:0,bc:0,cnt:0,nn:0,fw:0,bk:0,tm:0,mtm:0,err:0}}function create_bin_list(e,t){const r=new Array("rgb444"===t?4096:65536),n=e.length;if("rgba4444"===t)for(let t=0;t<n;++t){const n=e[t],o=n>>24&255,a=n>>16&255,i=n>>8&255,c=255&n,l=rgba8888_to_rgba4444(c,i,a,o);let s=l in r?r[l]:r[l]=create_bin();s.rc+=c,s.gc+=i,s.bc+=a,s.ac+=o,s.cnt++}else if("rgb444"===t)for(let t=0;t<n;++t){const n=e[t],o=n>>16&255,a=n>>8&255,i=255&n,c=rgb888_to_rgb444(i,a,o);let l=c in r?r[c]:r[c]=create_bin();l.rc+=i,l.gc+=a,l.bc+=o,l.cnt++}else for(let t=0;t<n;++t){const n=e[t],o=n>>16&255,a=n>>8&255,i=255&n,c=rgb888_to_rgb565(i,a,o);let l=c in r?r[c]:r[c]=create_bin();l.rc+=i,l.gc+=a,l.bc+=o,l.cnt++}return r}function quantize(e,t,r={}){const{format:n="rgb565",clearAlpha:o=!0,clearAlphaColor:a=0,clearAlphaThreshold:i=0,oneBitAlpha:c=!1}=r;if(!e||!e.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(e instanceof Uint8Array||e instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");const l=new Uint32Array(e.buffer);let s=!1!==r.useSqrt;const f="rgba4444"===n,u=create_bin_list(l,n),w=u.length,d=w-1,b=new Uint32Array(w+1);for(var g=0,y=0;y<w;++y){const e=u[y];if(null!=e){var p=1/e.cnt;f&&(e.ac*=p),e.rc*=p,e.gc*=p,e.bc*=p,u[g++]=e}}sqr(t)/g<.022&&(s=!1);var h,B,_;for(y=0;y<g-1;++y)u[y].fw=y+1,u[y+1].bk=y,s&&(u[y].cnt=Math.sqrt(u[y].cnt));for(s&&(u[y].cnt=Math.sqrt(u[y].cnt)),y=0;y<g;++y){find_nn(u,y,!1);var m=u[y].err;for(B=++b[0];B>1&&!(u[h=b[_=B>>1]].err<=m);B=_)b[B]=h;b[B]=y}var I=g-t;for(y=0;y<I;){for(var A;;){var S=b[1];if((A=u[S]).tm>=A.mtm&&u[A.nn].mtm<=A.tm)break;A.mtm==d?S=b[1]=b[b[0]--]:(find_nn(u,S,!1),A.tm=y);m=u[S].err;for(B=1;(_=B+B)<=b[0]&&(_<b[0]&&u[b[_]].err>u[b[_+1]].err&&_++,!(m<=u[h=b[_]].err));B=_)b[B]=h;b[B]=S}var x=u[A.nn],C=A.cnt,M=x.cnt;p=1/(C+M);f&&(A.ac=p*(C*A.ac+M*x.ac)),A.rc=p*(C*A.rc+M*x.rc),A.gc=p*(C*A.gc+M*x.gc),A.bc=p*(C*A.bc+M*x.bc),A.cnt+=x.cnt,A.mtm=++y,u[x.bk].fw=x.fw,u[x.fw].bk=x.bk,x.mtm=d}let q=[];var U=0;for(y=0;;++U){let e=clamp(Math.round(u[y].rc),0,255),t=clamp(Math.round(u[y].gc),0,255),r=clamp(Math.round(u[y].bc),0,255),n=255;if(f){if(n=clamp(Math.round(u[y].ac),0,255),c){n=n<=("number"==typeof c?c:127)?0:255}o&&n<=i&&(e=t=r=a,n=0)}const l=f?[e,t,r,n]:[e,t,r];if(existsInPalette(q,l)||q.push(l),0==(y=u[y].fw))break}return q}function existsInPalette(e,t){for(let r=0;r<e.length;r++){const n=e[r];let o=n[0]===t[0]&&n[1]===t[1]&&n[2]===t[2],a=!(n.length>=4&&t.length>=4)||n[3]===t[3];if(o&&a)return!0}return!1}function euclideanDistanceSquared(e,t){var r,n=0;for(r=0;r<e.length;r++){const o=e[r]-t[r];n+=o*o}return n}function roundStep(e,t){return t>1?Math.round(e/t)*t:e}function prequantize(e,{roundRGB:t=5,roundAlpha:r=10,oneBitAlpha:n=null}={}){const o=new Uint32Array(e.buffer);for(let e=0;e<o.length;e++){const a=o[e];let i=a>>24&255,c=a>>16&255,l=a>>8&255,s=255&a;if(i=roundStep(i,r),n){i=i<=("number"==typeof n?n:127)?0:255}s=roundStep(s,t),l=roundStep(l,t),c=roundStep(c,t),o[e]=i<<24|c<<16|l<<8|s}}function applyPalette(e,t,r="rgb565"){if(!e||!e.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(e instanceof Uint8Array||e instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");if(t.length>256)throw new Error("applyPalette() only works with 256 colors or less");const n=new Uint32Array(e.buffer),o=n.length,a="rgb444"===r?4096:65536,i=new Uint8Array(o),c=new Array(a);if("rgba4444"===r)for(let e=0;e<o;e++){const r=n[e],o=r>>24&255,a=r>>16&255,l=r>>8&255,s=255&r,f=rgba8888_to_rgba4444(s,l,a,o),u=f in c?c[f]:c[f]=nearestColorIndexRGBA(s,l,a,o,t);i[e]=u}else{const e="rgb444"===r?rgb888_to_rgb444:rgb888_to_rgb565;for(let r=0;r<o;r++){const o=n[r],a=o>>16&255,l=o>>8&255,s=255&o,f=e(s,l,a),u=f in c?c[f]:c[f]=nearestColorIndexRGB(s,l,a,t);i[r]=u}}return i}function nearestColorIndexRGBA(e,t,r,n,o){let a=0,i=1e100;for(let c=0;c<o.length;c++){const l=o[c];let s=sqr2(l[3]-n);if(s>i)continue;if(s+=sqr2(l[0]-e),s>i)continue;if(s+=sqr2(l[1]-t),s>i)continue;s+=sqr2(l[2]-r),s>i||(i=s,a=c)}return a}function nearestColorIndexRGB(e,t,r,n){let o=0,a=1e100;for(let i=0;i<n.length;i++){const c=n[i];let l=sqr2(c[0]-e);if(l>a)continue;if(l+=sqr2(c[1]-t),l>a)continue;l+=sqr2(c[2]-r),l>a||(a=l,o=i)}return o}function snapColorsToPalette(e,t,r=5){if(!e.length||!t.length)return;const n=e.map((e=>e.slice(0,3))),o=r*r,a=e[0].length;for(let r=0;r<t.length;r++){let i=t[r];i=i.length<a?[i[0],i[1],i[2],255]:i.length>a?i.slice(0,3):i.slice();const c=nearestColorIndexWithDistance(n,i.slice(0,3),euclideanDistanceSquared),l=c[0],s=c[1];s>0&&s<=o&&(e[l]=i)}}function sqr2(e){return e*e}function nearestColorIndex(e,t,r=euclideanDistanceSquared){let n=1/0,o=-1;for(let a=0;a<e.length;a++){const i=r(t,e[a]);i<n&&(n=i,o=a)}return o}function nearestColorIndexWithDistance(e,t,r=euclideanDistanceSquared){let n=1/0,o=-1;for(let a=0;a<e.length;a++){const i=r(t,e[a]);i<n&&(n=i,o=a)}return[o,n]}function nearestColor(e,t,r=euclideanDistanceSquared){return e[nearestColorIndex(e,t,r)]}function GIFEncoder(e={}){const{initialCapacity:t=4096,auto:r=!0}=e,n=createStream(t),o=new Uint8Array(256),a=new Int32Array(5003),i=new Int32Array(5003);let c=!1;return{reset(){n.reset(),c=!1},finish(){n.writeByte(constants_default.trailer)},bytes:()=>n.bytes(),bytesView:()=>n.bytesView(),get buffer(){return n.buffer},get stream(){return n},writeHeader:l,writeFrame(e,t,s,f={}){const{transparent:u=!1,transparentIndex:w=0,delay:d=0,palette:b=null,repeat:g=0,colorDepth:y=8,dispose:p=-1}=f;let h=!1;if(r?c||(h=!0,l(),c=!0):h=Boolean(f.first),t=Math.max(0,Math.floor(t)),s=Math.max(0,Math.floor(s)),h){if(!b)throw new Error("First frame must include a { palette } option");encodeLogicalScreenDescriptor(n,t,s,b,y),encodeColorTable(n,b),g>=0&&encodeNetscapeExt(n,g)}const B=Math.round(d/10);encodeGraphicControlExt(n,p,B,u,w);const _=Boolean(b)&&!h;encodeImageDescriptor(n,t,s,_?b:null),_&&encodeColorTable(n,b),encodePixels(n,e,t,s,y,o,a,i)}};function l(){writeUTFBytes(n,"GIF89a")}}function encodeGraphicControlExt(e,t,r,n,o){var a,i;e.writeByte(33),e.writeByte(249),e.writeByte(4),o<0&&(o=0,n=!1),n?(a=1,i=2):(a=0,i=0),t>=0&&(i=7&t),i<<=2;e.writeByte(i|a),writeUInt16(e,r),e.writeByte(o||0),e.writeByte(0)}function encodeLogicalScreenDescriptor(e,t,r,n,o=8){const a=128|o-1<<4|colorTableSize(n.length)-1;writeUInt16(e,t),writeUInt16(e,r),e.writeBytes([a,0,0])}function encodeNetscapeExt(e,t){e.writeByte(33),e.writeByte(255),e.writeByte(11),writeUTFBytes(e,"NETSCAPE2.0"),e.writeByte(3),e.writeByte(1),writeUInt16(e,t),e.writeByte(0)}function encodeColorTable(e,t){const r=1<<colorTableSize(t.length);for(let n=0;n<r;n++){let r=[0,0,0];n<t.length&&(r=t[n]),e.writeByte(r[0]),e.writeByte(r[1]),e.writeByte(r[2])}}function encodeImageDescriptor(e,t,r,n){if(e.writeByte(44),writeUInt16(e,0),writeUInt16(e,0),writeUInt16(e,t),writeUInt16(e,r),n){const t=0,r=0,o=colorTableSize(n.length)-1;e.writeByte(128|t|r|o)}else e.writeByte(0)}function encodePixels(e,t,r,n,o=8,a,i,c){lzwEncode_default(r,n,t,o,e,a,i,c)}function writeUInt16(e,t){e.writeByte(255&t),e.writeByte(t>>8&255)}function writeUTFBytes(e,t){for(var r=0;r<t.length;r++)e.writeByte(t.charCodeAt(r))}function colorTableSize(e){return Math.max(Math.ceil(Math.log2(e)),1)}var src_default=GIFEncoder;
+    </script>
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const colorPicker = document.getElementById('colorPicker');
+        const hexInput = document.getElementById('hexInput');
+        const eyedropperBtn = document.getElementById('eyedropperBtn');
+        const eraserBtn = document.getElementById('eraserBtn');
+        const brushSize = document.getElementById('brushSize');
+        const brushSizeValue = document.getElementById('brushSizeValue');
+        const brushSizeControl = document.getElementById('brushSizeControl');
+        const checkeredMode = document.getElementById('checkeredMode');
+        const tolerance = document.getElementById('tolerance');
+        const toleranceValue = document.getElementById('toleranceValue');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const makeGifBtn = document.getElementById('makeGifBtn');
+        const downloadGifBtn = document.getElementById('downloadGifBtn');
+        const cancelGifBtn = document.getElementById('cancelGifBtn');
+        const gifSection = document.getElementById('gifSection');
+        const gifPreview = document.getElementById('gifPreview');
+        const resetBtn = document.getElementById('resetBtn');
+        const controls = document.getElementById('controls');
+        const canvasContainer = document.getElementById('canvasContainer');
+        const originalCanvas = document.getElementById('originalCanvas');
+        const processedCanvas = document.getElementById('processedCanvas');
+        const originalCtx = originalCanvas.getContext('2d');
+        const processedCtx = processedCanvas.getContext('2d');
+
+        let originalImage = null;
+        let eyedropperActive = false;
+        let eraserActive = false;
+        let isErasing = false;
+        let generatedGifBlob = null;
+
+        // Background toggle buttons
+        document.querySelectorAll('.bg-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                document.querySelectorAll('.bg-toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Remove all background classes
+                processedCanvas.classList.remove('bg-dark', 'bg-color');
+                
+                // Add the appropriate class
+                const bgType = btn.getAttribute('data-bg');
+                if (bgType === 'dark') {
+                    processedCanvas.classList.add('bg-dark');
+                } else if (bgType === 'color') {
+                    processedCanvas.classList.add('bg-color');
+                }
+            });
+        });
+
+        // Checkered mode toggle
+        checkeredMode.addEventListener('change', () => {
+            processImage();
+        });
+
+        // Drop zone events
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                loadImage(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                loadImage(file);
+            }
+        });
+
+        // Update color from all sources
+        function updateColor(hexColor) {
+            hexColor = hexColor.toUpperCase();
+            if (!/^#[0-9A-F]{6}$/.test(hexColor)) {
+                return; // Invalid hex color
+            }
+            colorPicker.value = hexColor;
+            hexInput.value = hexColor;
+            checkeredMode.checked = false; // Disable checkered mode when manually selecting color
+            processImage(); // Live update
+        }
+
+        // Color picker change
+        colorPicker.addEventListener('input', (e) => {
+            updateColor(e.target.value);
+        });
+
+        // Hex input change
+        hexInput.addEventListener('input', (e) => {
+            let value = e.target.value;
+            if (!value.startsWith('#')) {
+                value = '#' + value;
+            }
+            e.target.value = value.toUpperCase();
+            if (/^#[0-9A-F]{6}$/.test(value)) {
+                colorPicker.value = value;
+            }
+        });
+
+        hexInput.addEventListener('blur', (e) => {
+            let value = e.target.value;
+            if (!value.startsWith('#')) {
+                value = '#' + value;
+            }
+            if (!/^#[0-9A-F]{6}$/.test(value)) {
+                // Reset to current color if invalid
+                e.target.value = colorPicker.value;
+            }
+        });
+
+        // Eyedropper tool
+        eyedropperBtn.addEventListener('click', () => {
+            eyedropperActive = !eyedropperActive;
+            if (eyedropperActive) {
+                // Disable eraser if active
+                if (eraserActive) {
+                    eraserActive = false;
+                    eraserBtn.classList.remove('active');
+                    eraserBtn.innerHTML = '<span>&#9998;</span> Erase Tool';
+                    processedCanvas.classList.remove('eraser-active');
+                    brushSizeControl.classList.remove('visible');
+                }
+                
+                originalCanvas.classList.add('eyedropper-active');
+                processedCanvas.classList.add('eyedropper-active');
+                eyedropperBtn.classList.add('active');
+                eyedropperBtn.innerHTML = '<span>&#10003;</span> Click on Image';
+            } else {
+                originalCanvas.classList.remove('eyedropper-active');
+                processedCanvas.classList.remove('eyedropper-active');
+                eyedropperBtn.classList.remove('active');
+                eyedropperBtn.innerHTML = '<span>&#128065;</span> Pick from Image';
+            }
+        });
+
+        // Eraser tool
+        eraserBtn.addEventListener('click', () => {
+            eraserActive = !eraserActive;
+            if (eraserActive) {
+                // Disable eyedropper if active
+                if (eyedropperActive) {
+                    eyedropperActive = false;
+                    originalCanvas.classList.remove('eyedropper-active');
+                    processedCanvas.classList.remove('eyedropper-active');
+                    eyedropperBtn.classList.remove('active');
+                    eyedropperBtn.innerHTML = '<span>&#128065;</span> Pick from Image';
+                }
+                
+                processedCanvas.classList.add('eraser-active');
+                eraserBtn.classList.add('active');
+                eraserBtn.innerHTML = '<span>&#10003;</span> Erasing (click & drag)';
+                brushSizeControl.classList.add('visible');
+            } else {
+                processedCanvas.classList.remove('eraser-active');
+                eraserBtn.classList.remove('active');
+                eraserBtn.innerHTML = '<span>&#9998;</span> Erase Tool';
+                brushSizeControl.classList.remove('visible');
+            }
+        });
+
+        // Brush size slider
+        brushSize.addEventListener('input', (e) => {
+            brushSizeValue.textContent = e.target.value;
+            // Update cursor size if eraser is active
+            if (eraserActive) {
+                const cursorOverlay = document.getElementById('cursorOverlay');
+                if (cursorOverlay && cursorOverlay.style.display !== 'none') {
+                    // Force redraw of cursor at current position
+                    const rect = processedCanvas.getBoundingClientRect();
+                    const radius = parseInt(e.target.value) * (rect.width / processedCanvas.width);
+                    const size = radius * 2;
+                    cursorOverlay.style.width = size + 'px';
+                    cursorOverlay.style.height = size + 'px';
+                    // Recenter the cursor
+                    const currentLeft = parseFloat(cursorOverlay.style.left);
+                    const currentTop = parseFloat(cursorOverlay.style.top);
+                    const oldRadius = parseFloat(cursorOverlay.style.width) / 2;
+                    cursorOverlay.style.left = (currentLeft + oldRadius - radius) + 'px';
+                    cursorOverlay.style.top = (currentTop + oldRadius - radius) + 'px';
+                }
+            }
+        });
+
+        // Canvas click for eyedropper
+        function handleCanvasClick(e, canvas, ctx) {
+            if (eyedropperActive && !eraserActive) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const x = Math.floor((e.clientX - rect.left) * scaleX);
+                const y = Math.floor((e.clientY - rect.top) * scaleY);
+
+                // Get pixel color
+                const imageData = ctx.getImageData(x, y, 1, 1);
+                const [r, g, b] = imageData.data;
+                const hexColor = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+                
+                // Update without processing (to avoid infinite loop)
+                colorPicker.value = hexColor;
+                hexInput.value = hexColor;
+
+                // Deactivate eyedropper
+                eyedropperActive = false;
+                originalCanvas.classList.remove('eyedropper-active');
+                processedCanvas.classList.remove('eyedropper-active');
+                eyedropperBtn.classList.remove('active');
+                eyedropperBtn.innerHTML = '<span>&#128065;</span> Pick from Image';
+                
+                // Now process with the new color
+                processImage();
+            }
+        }
+
+        // Eraser functionality
+        function erasePixels(e, canvas, ctx) {
+            if (!eraserActive) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = Math.floor((e.clientX - rect.left) * scaleX);
+            const y = Math.floor((e.clientY - rect.top) * scaleY);
+            const radius = parseInt(brushSize.value);
+
+            // Erase in a circular area
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance <= radius) {
+                        const px = x + dx;
+                        const py = y + dy;
+                        
+                        if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
+                            const index = (py * canvas.width + px) * 4;
+                            data[index + 3] = 0; // Set alpha to 0 (transparent)
+                        }
+                    }
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        // Draw brush cursor
+        function drawBrushCursor(e, canvas) {
+            if (!eraserActive) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const radius = parseInt(brushSize.value) * (rect.width / canvas.width);
+
+            // Create a temporary overlay to show the brush
+            let cursorOverlay = document.getElementById('cursorOverlay');
+            if (!cursorOverlay) {
+                cursorOverlay = document.createElement('div');
+                cursorOverlay.id = 'cursorOverlay';
+                cursorOverlay.style.position = 'fixed';
+                cursorOverlay.style.border = '2px solid #ef4444';
+                cursorOverlay.style.borderRadius = '50%';
+                cursorOverlay.style.pointerEvents = 'none';
+                cursorOverlay.style.zIndex = '1000';
+                cursorOverlay.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                document.body.appendChild(cursorOverlay);
+            }
+
+            const size = radius * 2;
+            cursorOverlay.style.width = size + 'px';
+            cursorOverlay.style.height = size + 'px';
+            cursorOverlay.style.left = (e.clientX - radius) + 'px';
+            cursorOverlay.style.top = (e.clientY - radius) + 'px';
+            cursorOverlay.style.display = 'block';
+        }
+
+        function hideBrushCursor() {
+            const cursorOverlay = document.getElementById('cursorOverlay');
+            if (cursorOverlay) {
+                cursorOverlay.style.display = 'none';
+            }
+        }
+
+        // Mouse events for eraser
+        processedCanvas.addEventListener('mousedown', (e) => {
+            if (eraserActive) {
+                isErasing = true;
+                erasePixels(e, processedCanvas, processedCtx);
+            }
+        });
+
+        processedCanvas.addEventListener('mousemove', (e) => {
+            if (eraserActive) {
+                drawBrushCursor(e, processedCanvas);
+                if (isErasing) {
+                    erasePixels(e, processedCanvas, processedCtx);
+                }
+            }
+        });
+
+        processedCanvas.addEventListener('mouseup', () => {
+            isErasing = false;
+        });
+
+        processedCanvas.addEventListener('mouseleave', () => {
+            isErasing = false;
+            hideBrushCursor();
+        });
+
+        processedCanvas.addEventListener('mouseenter', (e) => {
+            if (eraserActive) {
+                drawBrushCursor(e, processedCanvas);
+            }
+        });
+
+        originalCanvas.addEventListener('click', (e) => handleCanvasClick(e, originalCanvas, originalCtx));
+        processedCanvas.addEventListener('click', (e) => handleCanvasClick(e, processedCanvas, processedCtx));
+
+        // Tolerance slider with live update
+        tolerance.addEventListener('input', (e) => {
+            toleranceValue.textContent = e.target.value;
+            processImage(); // Live update
+        });
+
+        // Load image
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    
+                    // Set both canvas sizes
+                    originalCanvas.width = img.width;
+                    originalCanvas.height = img.height;
+                    processedCanvas.width = img.width;
+                    processedCanvas.height = img.height;
+                    
+                    // Draw original
+                    originalCtx.drawImage(img, 0, 0);
+                    
+                    // Default to white (#FFFFFF) instead of auto-detect
+                    colorPicker.value = '#FFFFFF';
+                    hexInput.value = '#FFFFFF';
+                    
+                    controls.style.display = 'block';
+                    canvasContainer.style.display = 'block';
+                    
+                    // Initial process
+                    processImage();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Process image
+        function processImage() {
+            if (!originalImage) return;
+
+            // Redraw original image on processed canvas
+            processedCtx.drawImage(originalImage, 0, 0);
+            
+            const imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
+            const data = imageData.data;
+            
+            const toleranceVal = parseInt(tolerance.value);
+            
+            if (checkeredMode.checked) {
+                // Checkered mode: remove both light gray (#CCCCCC) and white (#FFFFFF)
+                const colors = [
+                    { r: 204, g: 204, b: 204 }, // #CCCCCC - light gray
+                    { r: 255, g: 255, b: 255 }  // #FFFFFF - white
+                ];
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    
+                    // Check against both colors
+                    for (const targetColor of colors) {
+                        const distance = Math.sqrt(
+                            Math.pow(r - targetColor.r, 2) +
+                            Math.pow(g - targetColor.g, 2) +
+                            Math.pow(b - targetColor.b, 2)
+                        );
+                        
+                        if (distance <= toleranceVal * 4.41) {
+                            data[i + 3] = 0; // Set alpha to 0 (transparent)
+                            break; // No need to check other colors
+                        }
+                    }
+                }
+            } else {
+                // Normal mode: remove single color
+                const hexColor = colorPicker.value;
+                const targetR = parseInt(hexColor.substr(1, 2), 16);
+                const targetG = parseInt(hexColor.substr(3, 2), 16);
+                const targetB = parseInt(hexColor.substr(5, 2), 16);
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    
+                    // Calculate color distance
+                    const distance = Math.sqrt(
+                        Math.pow(r - targetR, 2) +
+                        Math.pow(g - targetG, 2) +
+                        Math.pow(b - targetB, 2)
+                    );
+                    
+                    // If color is within tolerance, make it transparent
+                    if (distance <= toleranceVal * 4.41) { // Scale tolerance to 0-441 range
+                        data[i + 3] = 0; // Set alpha to 0 (transparent)
+                    }
+                }
+            }
+            
+            processedCtx.putImageData(imageData, 0, 0);
+        }
+
+        // Download image
+        downloadBtn.addEventListener('click', () => {
+            processedCanvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'transparent-image.png';
+                a.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        });
+
+        // Reset
+        resetBtn.addEventListener('click', () => {
+            originalImage = null;
+            generatedGifBlob = null;
+            eyedropperActive = false;
+            eraserActive = false;
+            isErasing = false;
+            controls.style.display = 'none';
+            canvasContainer.style.display = 'none';
+            fileInput.value = '';
+            colorPicker.value = '#FFFFFF';
+            hexInput.value = '#FFFFFF';
+            checkeredMode.checked = false;
+            tolerance.value = 2;
+            toleranceValue.textContent = '2';
+            brushSize.value = 20;
+            brushSizeValue.textContent = '20';
+            originalCanvas.classList.remove('eyedropper-active');
+            processedCanvas.classList.remove('eyedropper-active', 'eraser-active');
+            processedCanvas.classList.remove('bg-dark', 'bg-color');
+            eyedropperBtn.classList.remove('active');
+            eyedropperBtn.innerHTML = '<span>&#128065;</span> Pick from Image';
+            eraserBtn.classList.remove('active');
+            eraserBtn.innerHTML = '<span>&#9998;</span> Erase Tool';
+            brushSizeControl.classList.remove('visible');
+            hideBrushCursor();
+            // Reset background toggle
+            document.querySelectorAll('.bg-toggle-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.bg-toggle-btn[data-bg="checkered"]').classList.add('active');
+            gifSection.classList.remove('visible');
+        });
+
+        // GIF Animation Functions
+        makeGifBtn.addEventListener('click', () => {
+            gifSection.classList.add('visible');
+            gifSection.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        cancelGifBtn.addEventListener('click', () => {
+            gifSection.classList.remove('visible');
+            downloadGifBtn.style.display = 'none';
+            gifPreview.innerHTML = '';
+            generatedGifBlob = null;
+            document.querySelectorAll('.animation-option').forEach(opt => opt.classList.remove('selected'));
+        });
+
+        // Animation selection
+        document.querySelectorAll('.animation-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.animation-option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                const animationType = option.getAttribute('data-anim');
+                generateAnimatedGif(animationType);
+            });
+        });
+
+        function generateAnimatedGif(animationType) {
+            gifPreview.innerHTML = '<div class="generating">Generating transparent GIF...</div>';
+            downloadGifBtn.style.display = 'none';
+
+            setTimeout(async () => {
+                try {
+                    // STEP 1: First scale down the transparent image to 128x128
+                    gifPreview.innerHTML = '<div class="generating">Scaling image to 128x128...</div>';
+                    
+                    const targetSize = 128;
+                    const preScaledCanvas = document.createElement('canvas');
+                    preScaledCanvas.width = targetSize;
+                    preScaledCanvas.height = targetSize;
+                    const preScaledCtx = preScaledCanvas.getContext('2d', { willReadFrequently: true });
+                    
+                    // Calculate scaling to fit and center
+                    const scale = Math.min(targetSize / processedCanvas.width, targetSize / processedCanvas.height);
+                    const scaledWidth = Math.round(processedCanvas.width * scale);
+                    const scaledHeight = Math.round(processedCanvas.height * scale);
+                    const offsetX = Math.round((targetSize - scaledWidth) / 2);
+                    const offsetY = Math.round((targetSize - scaledHeight) / 2);
+                    
+                    // Use best quality scaling
+                    preScaledCtx.imageSmoothingEnabled = true;
+                    preScaledCtx.imageSmoothingQuality = 'high';
+                    preScaledCtx.drawImage(processedCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+                    
+                    // STEP 2: Now create animation frames from the pre-scaled image
+                    const frames = 12;
+                    const frameDelay = 83; // ms per frame (~12fps)
+                    
+                    gifPreview.innerHTML = '<div class="generating">Creating animation frames...</div>';
+                    
+                    // Generate all frame canvases from the pre-scaled image
+                    const frameCanvases = [];
+                    for (let i = 0; i < frames; i++) {
+                        const frameCanvas = document.createElement('canvas');
+                        frameCanvas.width = targetSize;
+                        frameCanvas.height = targetSize;
+                        const frameCtx = frameCanvas.getContext('2d', { willReadFrequently: true });
+
+                        const progress = i / frames;
+                        
+                        frameCtx.save();
+                        applyAnimation(frameCtx, animationType, progress, targetSize, targetSize);
+                        frameCtx.drawImage(preScaledCanvas, 0, 0);
+                        frameCtx.restore();
+
+                        frameCanvases.push(frameCanvas);
+                    }
+
+                    gifPreview.innerHTML = '<div class="generating">Building color palette...</div>';
+                    
+                    // Collect all frame data to build a better global palette
+                    const allFramesData = [];
+                    for (let i = 0; i < frameCanvases.length; i++) {
+                        const frameData = frameCanvases[i].getContext('2d').getImageData(0, 0, targetSize, targetSize);
+                        allFramesData.push(frameData.data);
+                    }
+                    
+                    // Combine all pixels for better palette quantization
+                    const combinedData = new Uint8ClampedArray(allFramesData[0].length * allFramesData.length);
+                    for (let i = 0; i < allFramesData.length; i++) {
+                        combinedData.set(allFramesData[i], i * allFramesData[0].length);
+                    }
+                    
+                    // Quantize to get palette using all frames (max 256 colors for GIF)
+                    // Use rgb565 format for better color fidelity
+                    const palette = quantize(combinedData, 256, {
+                        format: 'rgb565',
+                        oneBitAlpha: null,
+                        clearAlpha: false
+                    });
+                    
+                    // Create GIF encoder
+                    const gif = GIFEncoder();
+                    
+                    gifPreview.innerHTML = '<div class="generating">Encoding GIF...</div>';
+                    
+                    // Add frames
+                    for (let i = 0; i < frameCanvases.length; i++) {
+                        const frameCtx = frameCanvases[i].getContext('2d');
+                        const frameData = frameCtx.getImageData(0, 0, targetSize, targetSize);
+                        
+                        // Apply palette to get indexed pixels with better format
+                        const indexedPixels = applyPalette(frameData.data, palette, 'rgb565');
+                        
+                        // Find transparent color index in palette
+                        let transparentIndex = 0;
+                        for (let j = 0; j < palette.length; j++) {
+                            if (palette[j].length >= 4 && palette[j][3] === 0) { // Alpha is 0
+                                transparentIndex = j;
+                                break;
+                            }
+                        }
+                        
+                        gif.writeFrame(indexedPixels, targetSize, targetSize, {
+                            palette: palette,
+                            delay: frameDelay,
+                            transparent: true,
+                            transparentIndex: transparentIndex,
+                            dispose: 2, // Restore to background
+                            first: i === 0,
+                            repeat: 0 // Loop forever
+                        });
+                        
+                        const percent = Math.round(((i + 1) / frameCanvases.length) * 100);
+                        gifPreview.innerHTML = `<div class="generating">Encoding GIF: ${percent}%</div>`;
+                    }
+                    
+                    gif.finish();
+                    
+                    // Get the GIF bytes
+                    const gifData = gif.bytes();
+                    generatedGifBlob = new Blob([gifData], { type: 'image/gif' });
+                    
+                    // Show preview
+                    gifPreview.innerHTML = '';
+                    
+                    const gifImg = document.createElement('img');
+                    gifImg.src = URL.createObjectURL(generatedGifBlob);
+                    gifImg.style.maxWidth = '200px';
+                    gifImg.style.borderRadius = '10px';
+                    gifImg.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
+                    gifImg.style.imageRendering = 'crisp-edges';
+                    
+                    gifPreview.appendChild(gifImg);
+                    
+                    const info = document.createElement('div');
+                    info.style.marginTop = '10px';
+                    info.style.fontSize = '13px';
+                    info.style.color = '#666';
+                    const sizeKB = (gifData.length / 1024).toFixed(1);
+                    info.innerHTML = `
+                        <div>Dimensions: ${targetSize}x${targetSize} (Slack compatible ✓)</div>
+                        <div style="color: #16a34a;">GIF created successfully! (${frames} frames @ 12fps, ${sizeKB}KB)</div>
+                        <div style="color: #667eea; margin-top: 10px; font-size: 12px;">
+                            Click Download GIF to save your animated transparent GIF
+                        </div>
+                    `;
+                    gifPreview.appendChild(info);
+                    
+                    downloadGifBtn.textContent = 'Download GIF';
+                    downloadGifBtn.style.display = 'block';
+
+                } catch (error) {
+                    console.error('Animation generation error:', error);
+                    gifPreview.innerHTML = '<div style="color: red;">Error generating animation: ' + error.message + '</div>';
+                }
+            }, 100);
+        }
+
+        // Easing functions for smoother animations
+        function easeInOutQuad(t) {
+            return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        }
+
+        function easeOutBounce(t) {
+            const n1 = 7.5625;
+            const d1 = 2.75;
+            if (t < 1 / d1) {
+                return n1 * t * t;
+            } else if (t < 2 / d1) {
+                return n1 * (t -= 1.5 / d1) * t + 0.75;
+            } else if (t < 2.5 / d1) {
+                return n1 * (t -= 2.25 / d1) * t + 0.9375;
+            } else {
+                return n1 * (t -= 2.625 / d1) * t + 0.984375;
+            }
+        }
+
+        function easeInQuad(t) {
+            return t * t;
+        }
+
+        function easeOutQuad(t) {
+            return t * (2 - t);
+        }
+
+        function applyAnimation(ctx, type, progress, width, height) {
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            ctx.translate(centerX, centerY);
+
+            switch(type) {
+                case 'party':
+                    // Rotate + scale + color shift effect - increased zoom
+                    const partyRotation = progress * Math.PI * 2;
+                    const partyScale = 1 + Math.sin(progress * Math.PI * 4) * 0.25; // Increased from 0.15 to 0.25
+                    ctx.rotate(partyRotation);
+                    ctx.scale(partyScale, partyScale);
+                    break;
+                    
+                case 'panic':
+                    // Fast shake with rotation and zoom randomness
+                    const panicShakeX = Math.sin(progress * Math.PI * 16) * 8;
+                    const panicShakeY = Math.cos(progress * Math.PI * 12) * 6;
+                    const panicRotate = Math.sin(progress * Math.PI * 10) * 0.2;
+                    // Add random zoom in and out
+                    const panicZoom = 1 + Math.sin(progress * Math.PI * 13) * 0.15 + Math.cos(progress * Math.PI * 17) * 0.1;
+                    ctx.translate(panicShakeX, panicShakeY);
+                    ctx.rotate(panicRotate);
+                    ctx.scale(panicZoom, panicZoom);
+                    break;
+                    
+                case 'zoom':
+                    // Smooth zoom in and out with easing
+                    const easedProgress = easeInOutQuad(Math.sin(progress * Math.PI * 2) * 0.5 + 0.5);
+                    const zoomScale = 1 + easedProgress * 0.4;
+                    ctx.scale(zoomScale, zoomScale);
+                    break;
+                    
+                case 'bounce':
+                    // More exaggerated bounce with proper squish and stretch physics
+                    // The image should bounce from the bottom of the canvas
+                    const bounceTime = progress * Math.PI * 2; // Full sine cycle
+                    const heightProgress = Math.abs(Math.sin(bounceTime));
+                    // Start from bottom and bounce up
+                    const maxBounceHeight = height * 0.5; // Bounce up 50% of canvas height (increased from 40%)
+                    const bounceHeight = heightProgress * maxBounceHeight;
+                    // Translate UP from bottom position (negative Y moves up)
+                    ctx.translate(0, maxBounceHeight - bounceHeight);
+                    
+                    // Physics: squish when at bottom (bounceHeight near 0), normal when at top
+                    const impactAmount = 1 - heightProgress; // 1 when at bottom, 0 when at top
+                    const squashFactor = 1 - impactAmount * 0.5; // Squish vertically at bottom (0.5 min)
+                    const stretchFactor = 1 + impactAmount * 0.4; // Stretch horizontally at bottom (1.4 max)
+                    ctx.scale(stretchFactor, squashFactor);
+                    break;
+
+                case 'intense':
+                    // Fast zoom in (0-20%), hold zoomed (20-75%), slow zoom out (75-100%)
+                    let intenseScale;
+                    if (progress < 0.2) {
+                        // Fast zoom in (0 to 0.2 = 20% of animation)
+                        const zoomInProgress = progress / 0.2;
+                        const easedIn = easeInQuad(zoomInProgress);
+                        intenseScale = 1 + easedIn * 0.8; // Scale from 1.0 to 1.8
+                    } else if (progress < 0.75) {
+                        // Hold at zoomed in state (20% to 75% = 55% of animation) - increased from 35% to 55%
+                        intenseScale = 1.8; // Stay at max zoom
+                    } else {
+                        // Slow zoom out (75% to 100% = 25% of animation)
+                        const zoomOutProgress = (progress - 0.75) / 0.25;
+                        const easedOut = easeOutQuad(zoomOutProgress);
+                        intenseScale = 1.8 - easedOut * 0.8; // Scale from 1.8 back to 1.0
+                    }
+                    ctx.scale(intenseScale, intenseScale);
+                    break;
+
+                case 'approach':
+                    // Fast continuous zoom in, then instant reset already in motion
+                    // Zoom in for 85% of the animation, then instant cut back (slower than before)
+                    let approachScale;
+                    if (progress < 0.85) {
+                        // Zoom in (0 to 0.85 = 85% of animation) - slower, more time to zoom
+                        const zoomProgress = progress / 0.85;
+                        const easedZoom = easeInQuad(zoomProgress);
+                        approachScale = 0.3 + easedZoom * 4.7; // Scale from 0.3 to 5.0 (zoom in MUCH further)
+                    } else {
+                        // Instant reset but already in motion (85% to 100%)
+                        // Start the reset partway through the zoom
+                        const resetProgress = (progress - 0.85) / 0.15;
+                        approachScale = 0.3 + (resetProgress * 0.4); // Start at 0.3, already moving to 0.7
+                    }
+                    ctx.scale(approachScale, approachScale);
+                    break;
+            }
+
+            ctx.translate(-centerX, -centerY);
+        }
+
+        downloadGifBtn.addEventListener('click', async () => {
+            if (!generatedGifBlob) {
+                alert('No GIF has been generated yet. Please select an animation first.');
+                return;
+            }
+            
+            // Download the GIF file
+            const url = URL.createObjectURL(generatedGifBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'animated-transparent.gif';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
